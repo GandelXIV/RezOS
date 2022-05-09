@@ -1,0 +1,15 @@
+[package]
+name = "RezOS"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "mkfs"
+path = "mkfs/main.rs"
+
+[dependencies]
+anyhow = "1.0"
+derive-new = "0.5.9"
+clap = "3.1.17"
