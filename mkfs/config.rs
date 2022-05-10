@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::env;
 use std::fmt::Display;
 
+#[allow(dead_code)]
 
 pub const DEFAULT_BOOTLOADER:  &str     = "boot.bin";
 pub const DEFAULT_OUTPUT:      &str     = "image.bin";
