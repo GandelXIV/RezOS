@@ -20,7 +20,7 @@ mov ax, 0
 mov dx, ax
 mov es, ax
 mov ss, ax
-mov sp, 7C00h   ; setup stack
+mov sp, 0x7C00   ; setup stack
 
 real_putsln MSG_INIT
 
