@@ -5,6 +5,11 @@ mov bx, %1
 call real_puts_start
 %endmacro
 
+%macro real_putsln 1
+real_puts %1
+scroll
+%endmacro
+
 real_puts_start:
 pusha   ; push all registers so we can retrieve them after
 mov ah, 0x0E

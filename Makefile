@@ -12,7 +12,7 @@ build/mkfs.exec: mkfs/* Cargo.toml
 	$(CARGO) build --bin mkfs --release
 	cp target/release/mkfs $@
 
-build/boot.bin: boot/*
+build/boot.bin: boot/* boot/real/io/*
 	$(ASM) -f $(ASM_FORMAT) boot/main.asm -o $@
 
 clean:

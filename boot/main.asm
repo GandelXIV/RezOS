@@ -22,8 +22,7 @@ mov es, ax
 mov ss, ax
 mov sp, 7C00h   ; setup stack
 
-scroll
-real_puts MSG_INIT
+real_putsln MSG_INIT
 
 jmp $   ; halt
 
