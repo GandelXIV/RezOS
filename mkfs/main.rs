@@ -1,6 +1,7 @@
 // ENTFS => Entity file system; an entity is a file, a directory and a symlink at the same time
 use std::fs::File;
 use std::io::{Read, Write};
+use anyhow;
 mod config;
 
 fn build_image(blocks: usize, blocksize: usize) -> Vec<Vec<u8>> {
@@ -11,8 +12,14 @@ fn build_image(blocks: usize, blocksize: usize) -> Vec<Vec<u8>> {
     image
 }
 
-fn main() {
-    let cfg = config::Config::argload();
+#[derive(Debug)]
+enum MkfsError {
+    BadConfig,
+}
+
+struct MkfsReport {}
+
+fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
     let mut image: Vec<Vec<u8>> = build_image(1000, cfg.block_size);
 
     match cfg.bootloader {
@@ -22,7 +29,7 @@ fn main() {
             }
         },
         config::Target::Raw(data) => image[0] = data,
-        _ => panic!("Bad config"),
+        _ => return Err(MkfsError::BadConfig), 
     }
 
     match cfg.output {
@@ -38,6 +45,12 @@ fn main() {
                 println!("{:?}", block);
             }
         }
-        _ => panic!("Bad config"),
+        _ => return Err(MkfsError::BadConfig),
     }
+    Ok(MkfsReport{})
+}
+
+fn main() {
+    let cfg = config::Config::argload();
+    mkfs(cfg).unwrap();
 }

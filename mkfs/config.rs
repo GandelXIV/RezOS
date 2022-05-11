@@ -9,13 +9,7 @@ pub const DEFAULT_OUTPUT:      &str     = "image.bin";
 pub const DEFAULT_SOURCE:      &str     = "kernel.bin";
 pub const DEFAULT_DIRECTBOOT:  bool     = true;
 pub const DEFAULT_BLOCK_SIZE:  usize    = 512;
-pub const DEFAULT_BLOCK_COUNT: AddrSize = AddrSize::Normal;
 
-pub enum AddrSize {
-    Normal, // 32 bit
-    Large,  // 64 bit 
-    Small,  // 16 bit
-}
 
 #[derive(PartialEq)]
 pub enum Target {
@@ -30,7 +24,6 @@ pub struct Config {
     pub source: Target,
     pub directboot: bool,
     pub block_size: usize,
-    pub block_count: AddrSize, // normal: 4e9, large: 1.8e19, small: 6.5e4
 }
 
 impl Config {
@@ -41,7 +34,6 @@ impl Config {
             source:      Target::File(String::from(DEFAULT_SOURCE)),
             directboot:  DEFAULT_DIRECTBOOT,
             block_size:  DEFAULT_BLOCK_SIZE,
-            block_count: DEFAULT_BLOCK_COUNT
         }
     }
 
@@ -55,14 +47,6 @@ impl Config {
                 "-s" => cfg.source = Target::File(arg.clone()),
                 "--directboot" => cfg.directboot = true,
                 "--no-directboot" => cfg.directboot = false,
-                "--block_count" => {
-                    match arg.as_str() {
-                        "32" => cfg.block_count = AddrSize::Normal,
-                        "64" => cfg.block_count = AddrSize::Large,
-                        "16" => cfg.block_count = AddrSize::Small,
-                        _ => panic!("Invalid!"),
-                    }
-                }
                 "--block_size" => cfg.block_size = arg.as_str().parse().unwrap(),
                 _ => {}
             }
