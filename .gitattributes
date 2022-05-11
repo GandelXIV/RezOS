@@ -1,0 +1,6 @@
+*.rs    linguist-language=rust
+*.in    linguist-language=rust
+*.sh    linguist-language=bash
+*.asm   linguist-language=assembly
+*.c     linguist-language=C
+*.h     linguist-language=C
