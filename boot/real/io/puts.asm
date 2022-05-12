@@ -1,8 +1,10 @@
 INT_VIDEO equ 0x10
 
 %macro real_puts 1
+push bx
 mov bx, %1
 call real_puts_start
+pop bx
 %endmacro
 
 %macro real_putsln 1
