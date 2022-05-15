@@ -1,8 +1,11 @@
 // ENTFS => Entity file system; an entity is a file, a directory and a symlink at the same time
 use std::fs::File;
 use std::io::{Read, Write};
-use anyhow;
+use bincode;
+
+mod blocks;
 mod config;
+
 
 fn build_image(blocks: usize, blocksize: usize) -> Vec<Vec<u8>> {
     let mut image = vec![];
@@ -20,11 +23,14 @@ enum MkfsError {
 struct MkfsReport {}
 
 fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
-    let mut image: Vec<Vec<u8>> = build_image(1000, cfg.block_size);
+    let mut image: Vec<Vec<u8>> = build_image(1000, cfg.block_size as usize);
+
+    let sb = blocks::SuperBlock::new(1, cfg.block_size);
+    image[1] = bincode::serialize(&sb).unwrap();
 
     match cfg.bootloader {
         config::Target::File(name) => {
-            if File::open(name).unwrap().read(&mut image[0]).unwrap() > cfg.block_size {
+            if File::open(name).unwrap().read(&mut image[0]).unwrap() > cfg.block_size as usize {
                 panic!("Bootloader exceeds block size of {}", cfg.block_size);
             }
         },

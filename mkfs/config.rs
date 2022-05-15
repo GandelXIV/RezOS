@@ -1,14 +1,11 @@
-use std::collections::HashMap;
 use std::env;
-use std::fmt::Display;
 
-#[allow(dead_code)]
 
 pub const DEFAULT_BOOTLOADER:  &str     = "boot.bin";
 pub const DEFAULT_OUTPUT:      &str     = "image.bin";
 pub const DEFAULT_SOURCE:      &str     = "kernel.bin";
 pub const DEFAULT_DIRECTBOOT:  bool     = true;
-pub const DEFAULT_BLOCK_SIZE:  usize    = 512;
+pub const DEFAULT_BLOCK_SIZE:  u16      = 512;
 
 
 #[derive(PartialEq)]
@@ -23,7 +20,7 @@ pub struct Config {
     pub output: Target,
     pub source: Target,
     pub directboot: bool,
-    pub block_size: usize,
+    pub block_size: u16,
 }
 
 impl Config {
