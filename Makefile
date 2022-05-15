@@ -4,6 +4,7 @@ ASM = nasm
 ASM_FORMAT = bin
 CARGO = cargo
 EMU = qemu-system-x86_64
+EMU_ARGS = -nographic
 
 build/RezOS.bin: build/boot.bin build/mkfs.exec
 	build/mkfs.exec -b build/boot.bin -o $@
@@ -19,4 +20,4 @@ clean:
 	rm -f build/*
 
 run: build/RezOS.bin
-	$(EMU) build/RezOS.bin
+	$(EMU) $(EMU_ARGS) build/RezOS.bin
