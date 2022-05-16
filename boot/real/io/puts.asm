@@ -1,10 +1,10 @@
 INT_VIDEO equ 0x10
 
 %macro real_puts 1
-push bx
+pusha
 mov bx, %1
 call real_puts_start
-pop bx
+popa
 %endmacro
 
 %macro real_putsln 1
@@ -13,7 +13,6 @@ scroll
 %endmacro
 
 real_puts_start:
-pusha   ; push all registers so we can retrieve them after
 mov ah, 0x0E
 
 real_puts_loop:
@@ -27,5 +26,4 @@ inc bx  ; select next char
 jmp real_puts_loop  ; repeat
 
 real_puts_end:
-popa    ; retrieve registers
 ret

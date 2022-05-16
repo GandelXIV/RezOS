@@ -1,8 +1,10 @@
 use serde::{Serialize, Deserialize};
 use derive_new::new;
+use anyhow;
 
 pub const SIGN_SB: u32 = 564831;
 pub const SIGN_INODE: u32 = 768323;
+pub const ALLOWED_FILE_NAME_CHARS: &'static str = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890._";
 pub type Addr = u32;
 
 pub enum BlockType {
@@ -44,11 +46,22 @@ impl SuperBlock {
 }
 
 impl Inode {
-    pub fn new(name: &str) -> Self {
-        Self {
+    pub fn new(name: &str) -> Result<Self, anyhow::Error> {
+        for i in name.chars() {
+            let mut valid = false;
+            for j in ALLOWED_FILE_NAME_CHARS.chars() {
+                if i == j {
+                    valid = true;
+                }
+            }
+            if !valid {
+                return Err(anyhow::anyhow!("invalid character '{}' in file name: {}", i, name));
+            }
+        }
+        Ok(Self {
             sign: SIGN_INODE,
             name: name.chars().collect(),
             fat: vec![],
-        }
+        })
     }
 }
