@@ -21,7 +21,7 @@ pub struct Cluster {
 pub struct SuperBlock {
     sign: u32,
     version: u16,
-    blocksize: u16,
+    pub blocksize: u16,
     directboot: Option<Cluster>,
     root: Option<Addr>,
 }
