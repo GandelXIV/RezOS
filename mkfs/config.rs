@@ -1,11 +1,13 @@
 use std::env;
 
 
-pub const DEFAULT_BOOTLOADER:  &str     = "boot.bin";
-pub const DEFAULT_OUTPUT:      &str     = "image.bin";
-pub const DEFAULT_SOURCE:      &str     = "kernel.bin";
+pub const DEFAULT_BOOTLOADER:  &str     = "build/boot.bin";
+pub const DEFAULT_OUTPUT:      &str     = "build/image.bin";
+pub const DEFAULT_SOURCE:      &str     = "build/kernel.bin";
 pub const DEFAULT_DIRECTBOOT:  bool     = true;
 pub const DEFAULT_BLOCK_SIZE:  u16      = 512;
+
+pub const SECTOR_SIZE:         usize    = 512;
 
 
 #[derive(PartialEq)]
