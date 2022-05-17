@@ -2,14 +2,17 @@ use serde::{Serialize, Deserialize};
 use derive_new::new;
 use anyhow;
 
-pub const SIGN_SB: u32 = 564831;
-pub const SIGN_INODE: u32 = 768323;
+pub const SIGN_SB: u16 = 0x4321;
+pub const SIGN_INODE: u16 = 0x1234;
 pub const ALLOWED_FILE_NAME_CHARS: &'static str = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890._";
 pub type Addr = u32;
 
-pub enum BlockType {
-    
+
+pub union Node<'a> {
+    pub dnode: &'a [u8],
+    pub inode: &'a Inode,
 }
+
 
 #[derive(Serialize, Deserialize, new)]
 pub struct Cluster {
@@ -19,16 +22,15 @@ pub struct Cluster {
 
 #[derive(Serialize, Deserialize)]
 pub struct SuperBlock {
-    pub sign: u32,
+    pub sign: u16,
     pub version: u16,
     pub blocksize: u16,
     pub directboot: Option<Cluster>,
     pub root: Option<Addr>,
 }
 
-#[derive(Serialize, Deserialize)]
 pub struct Inode {
-    sign: u32,
+    sign: u16,
     name: Vec<char>,
     fat: Vec<Cluster>,
 }
