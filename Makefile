@@ -6,10 +6,10 @@ CARGO = cargo
 EMU = qemu-system-x86_64
 EMU_ARGS = -nographic
 
-build/RezOS.bin: build/boot.bin build/mkfs.exec
+build/RezOS.bin: build/boot.bin build/mkfs.exe
 	build/mkfs.exec -b build/boot.bin -o $@
 
-build/mkfs.exec: mkfs/* Cargo.toml
+build/mkfs.exe: mkfs/* Cargo.toml
 	$(CARGO) build --bin mkfs --release
 	cp target/release/mkfs $@
 
