@@ -4,15 +4,10 @@ use std::fs::File;
 use std::io::{Read, Write, BufReader};
 use std::ops::Add;
 use bincode;
-use blocks::{SuperBlock, Inode, Addr};
+use blocks::{SuperBlock, Inode, Addr, Node};
 
 mod blocks;
 mod config;
-
-const IMAGE_MAX_BLOCK_COUNT: usize = 9876;
-const IMAGE_BOOT_ADDR: Addr = 0;
-const IMAGE_SUPER_ADDR: Addr = 1;
-
 
 
 #[derive(Debug)]
@@ -26,56 +21,24 @@ struct MkfsReport {}
 struct Image {
     sb: SuperBlock,
     boot: Vec<u8>,
-    bin: HashMap<Addr, Vec<u8>>,
-    inodes: HashMap<Addr, Inode>,
-    bat: Vec<bool>, // block allocation table
+    nodes: Vec<Node<'static>>,
 }
 
 impl Image {
     fn new(sb: SuperBlock, boot: Vec<u8>) -> Self {
-        let mut instance = Self {
+        Self {
             sb: sb,
             boot: boot,
-            bin: HashMap::new(),
-            inodes: HashMap::new(),
-            bat: vec![false; IMAGE_MAX_BLOCK_COUNT],
-        };
-        // asign boot and super
-        instance.bat[IMAGE_BOOT_ADDR as usize] = true;
-        instance.bat[IMAGE_SUPER_ADDR as usize] = true;
-        // return
-        instance
-    }
-    
-    fn assign_block(&mut self) -> Result<Addr, anyhow::Error> {
-        for i in 0..self.bat.len() {
-            if !self.bat[i] {
-                self.bat[i] = true;
-                return Ok(i as Addr);
-            }
+            nodes: vec![],
         }
-        Err(anyhow::anyhow!("Could not find free block"))
     }
-    
-    fn build(&mut self, target: &mut Vec<u8>) -> anyhow::Result<()>{
-        for i in 0..self.bat.len() {
-            if i as Addr == IMAGE_BOOT_ADDR {
-                target.append(&mut self.boot);
-            }
-            else if i as Addr == IMAGE_SUPER_ADDR {
-                target.append(&mut bincode::serialize(&self.sb)?);
-            }
-            else if let Some(raw) = self.bin.get(&(i as Addr)).take() {
-                target.append(&mut raw.clone());   // messy way to do it
-            }
-            else if let Some(inode) = self.inodes.get(&(i as Addr)).take() {
-                target.append(&mut bincode::serialize(&inode)?);
-            }
-            else {
-                target.append(&mut vec![0; self.sb.blocksize as usize]);
-            }
+
+    fn build(&mut self, target: &mut Vec<u8>) {
+        target.append(&mut self.boot);
+        target.append(&mut bincode::serialize(&self.sb).unwrap());
+        for node in self.nodes.iter() {
+            target.append(&mut Vec::from(unsafe { node.dnode }));
         }
-        Ok(())
     }
 }
 
@@ -100,7 +63,7 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
     match cfg.output {
         config::Target::File(name) => {
             let mut compact = vec![];
-            image.build(&mut compact).unwrap();
+            image.build(&mut compact);
             File::create(&name).unwrap().write(&compact).unwrap();
         }
         _ => return Err(MkfsError::BadConfig),
