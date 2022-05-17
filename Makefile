@@ -7,7 +7,7 @@ EMU = qemu-system-x86_64
 EMU_ARGS = -nographic
 
 build/RezOS.bin: build/boot.bin build/mkfs.exe
-	build/mkfs.exec -b build/boot.bin -o $@
+	build/mkfs.exe -b build/boot.bin -o $@
 
 build/mkfs.exe: mkfs/* Cargo.toml
 	$(CARGO) build --bin mkfs --release
