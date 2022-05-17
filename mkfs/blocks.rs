@@ -19,11 +19,11 @@ pub struct Cluster {
 
 #[derive(Serialize, Deserialize)]
 pub struct SuperBlock {
-    sign: u32,
-    version: u16,
+    pub sign: u32,
+    pub version: u16,
     pub blocksize: u16,
-    directboot: Option<Cluster>,
-    root: Option<Addr>,
+    pub directboot: Option<Cluster>,
+    pub root: Option<Addr>,
 }
 
 #[derive(Serialize, Deserialize)]

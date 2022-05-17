@@ -25,6 +25,7 @@ struct MkfsReport {}
 
 struct Image {
     sb: SuperBlock,
+    boot: Vec<u8>,
     bin: HashMap<Addr, Vec<u8>>,
     inodes: HashMap<Addr, Inode>,
     bat: Vec<bool>, // block allocation table
@@ -34,14 +35,13 @@ impl Image {
     fn new(sb: SuperBlock, boot: Vec<u8>) -> Self {
         let mut instance = Self {
             sb: sb,
+            boot: boot,
             bin: HashMap::new(),
             inodes: HashMap::new(),
             bat: vec![false; IMAGE_MAX_BLOCK_COUNT],
         };
-        // asign boot
+        // asign boot and super
         instance.bat[IMAGE_BOOT_ADDR as usize] = true;
-        instance.bin.insert(IMAGE_BOOT_ADDR, boot);
-        // assign super
         instance.bat[IMAGE_SUPER_ADDR as usize] = true;
         // return
         instance
@@ -57,9 +57,12 @@ impl Image {
         Err(anyhow::anyhow!("Could not find free block"))
     }
     
-    fn build(&self, target: &mut Vec<u8>) -> anyhow::Result<()>{
+    fn build(&mut self, target: &mut Vec<u8>) -> anyhow::Result<()>{
         for i in 0..self.bat.len() {
-            if i as Addr == IMAGE_SUPER_ADDR {
+            if i as Addr == IMAGE_BOOT_ADDR {
+                target.append(&mut self.boot);
+            }
+            else if i as Addr == IMAGE_SUPER_ADDR {
                 target.append(&mut bincode::serialize(&self.sb)?);
             }
             else if let Some(raw) = self.bin.get(&(i as Addr)).take() {
@@ -82,7 +85,7 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
         config::Target::File(name) => {
             if let Ok(file) = File::open(&name) {
                 let mut buf_reader = BufReader::new(file);
-                buf_reader.read_to_end(&mut boot).unwrap();
+                buf_reader.read_to_end(&mut boot).unwrap(); // lmao
             }
             else {
                 return Err(MkfsError::FileNotFound(name));
@@ -92,7 +95,7 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
         _ => return Err(MkfsError::BadConfig), 
     }
 
-    let image = Image::new( blocks::SuperBlock::new(1, cfg.block_size), boot );
+    let mut image = Image::new( blocks::SuperBlock::new(1, cfg.block_size), boot );
     
     match cfg.output {
         config::Target::File(name) => {
