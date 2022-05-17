@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 // ENTFS => Entity file system; an entity is a file, a directory and a symlink at the same time
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Read, Write, BufReader};
 use std::ops::Add;
 use bincode;
 use blocks::{SuperBlock, Inode, Addr};
@@ -18,6 +18,7 @@ const IMAGE_SUPER_ADDR: Addr = 1;
 #[derive(Debug)]
 enum MkfsError {
     BadConfig,
+    FileNotFound(String),
 }
 
 struct MkfsReport {}
@@ -79,13 +80,17 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
     let mut boot = Vec::new();
     match cfg.bootloader {
         config::Target::File(name) => {
-            File::open(name).unwrap().read(&mut boot).unwrap();
+            if let Ok(file) = File::open(&name) {
+                let mut buf_reader = BufReader::new(file);
+                buf_reader.read_to_end(&mut boot).unwrap();
+            }
+            else {
+                return Err(MkfsError::FileNotFound(name));
+            }
         },
         config::Target::Raw(data) => boot = data,
         _ => return Err(MkfsError::BadConfig), 
     }
-
-    assert_ne!(boot, vec![]);
 
     let image = Image::new( blocks::SuperBlock::new(1, cfg.block_size), boot );
     
