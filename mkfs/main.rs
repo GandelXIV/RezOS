@@ -1,15 +1,14 @@
 // ENTFS => Entity file system; an entity is a file, a directory and a symlink at the same time
-use std::fs::{File};
-use std::io::{Read, Write, BufReader};
-use std::mem::size_of;
 use bincode;
-use blocks::{SuperBlock, Inode, Addr, Node};
+use blocks::{Addr, Inode, Node, SuperBlock};
+use std::fs::File;
+use std::io::{BufReader, Read, Write};
+use std::mem::size_of;
 
 use crate::config::SECTOR_SIZE;
 
 mod blocks;
 mod config;
-
 
 #[derive(Debug)]
 enum MkfsError {
@@ -50,17 +49,16 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
             if let Ok(file) = File::open(&name) {
                 let mut buf_reader = BufReader::new(file);
                 buf_reader.read_to_end(&mut boot).unwrap(); // lmao
-            }
-            else {
+            } else {
                 return Err(MkfsError::FileNotFound(name));
             }
-        },
+        }
         config::Target::Raw(data) => boot = data,
-        _ => return Err(MkfsError::BadConfig), 
+        _ => return Err(MkfsError::BadConfig),
     }
 
-    let mut image = Image::new( blocks::SuperBlock::new(1, cfg.block_size), boot );
-    
+    let mut image = Image::new(blocks::SuperBlock::new(1, cfg.block_size), boot);
+
     assert_eq!(size_of::<Inode>(), SECTOR_SIZE);
 
     match cfg.output {
@@ -71,7 +69,7 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
         }
         _ => return Err(MkfsError::BadConfig),
     }
-    Ok(MkfsReport{})
+    Ok(MkfsReport {})
 }
 
 fn main() {

@@ -1,14 +1,12 @@
 use std::env;
 
+pub const DEFAULT_BOOTLOADER: &str = "build/boot.bin";
+pub const DEFAULT_OUTPUT: &str = "build/image.bin";
+pub const DEFAULT_SOURCE: &str = "build/kernel.bin";
+pub const DEFAULT_DIRECTBOOT: bool = true;
+pub const DEFAULT_BLOCK_SIZE: u16 = 512;
 
-pub const DEFAULT_BOOTLOADER:  &str     = "build/boot.bin";
-pub const DEFAULT_OUTPUT:      &str     = "build/image.bin";
-pub const DEFAULT_SOURCE:      &str     = "build/kernel.bin";
-pub const DEFAULT_DIRECTBOOT:  bool     = true;
-pub const DEFAULT_BLOCK_SIZE:  u16      = 512;
-
-pub const SECTOR_SIZE:         usize    = 512;
-
+pub const SECTOR_SIZE: usize = 512;
 
 #[derive(PartialEq)]
 pub enum Target {
@@ -28,11 +26,11 @@ pub struct Config {
 impl Config {
     pub fn default() -> Self {
         Self {
-            bootloader:  Target::File(String::from(DEFAULT_BOOTLOADER)),
-            output:      Target::File(String::from(DEFAULT_OUTPUT)),
-            source:      Target::File(String::from(DEFAULT_SOURCE)),
-            directboot:  DEFAULT_DIRECTBOOT,
-            block_size:  DEFAULT_BLOCK_SIZE,
+            bootloader: Target::File(String::from(DEFAULT_BOOTLOADER)),
+            output: Target::File(String::from(DEFAULT_OUTPUT)),
+            source: Target::File(String::from(DEFAULT_SOURCE)),
+            directboot: DEFAULT_DIRECTBOOT,
+            block_size: DEFAULT_BLOCK_SIZE,
         }
     }
 
@@ -41,7 +39,7 @@ impl Config {
         let mut last = String::new();
         for arg in env::args() {
             match last.as_str() {
-                "-b" => cfg.bootloader = Target::File(arg.clone()) ,
+                "-b" => cfg.bootloader = Target::File(arg.clone()),
                 "-o" => cfg.output = Target::File(arg.clone()),
                 "-s" => cfg.source = Target::File(arg.clone()),
                 "--directboot" => cfg.directboot = true,

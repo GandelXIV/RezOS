@@ -1,18 +1,16 @@
-use serde::{Serialize, Deserialize};
-use derive_new::new;
 use anyhow;
+use derive_new::new;
+use serde::{Deserialize, Serialize};
 
 use crate::config::SECTOR_SIZE;
 
 pub const SIGN_SB: u16 = 0x4321;
 pub type Addr = u32;
 
-
 pub union Node<'a> {
     pub dnode: &'a [u8],
     pub inode: &'a Inode,
 }
-
 
 #[derive(Serialize, Deserialize, new, Clone, Copy)]
 pub struct Cluster {
@@ -43,19 +41,19 @@ impl SuperBlock {
 
 #[repr(C)]
 pub struct Inode {
-    name: [char; SECTOR_SIZE/16],
-    flt: [Addr; SECTOR_SIZE/16],
-    blt: [Addr; SECTOR_SIZE/16],
-    pub dat: [Cluster; SECTOR_SIZE/32],
+    name: [char; SECTOR_SIZE / 16],
+    flt: [Addr; SECTOR_SIZE / 16],
+    blt: [Addr; SECTOR_SIZE / 16],
+    pub dat: [Cluster; SECTOR_SIZE / 32],
 }
 
 impl Inode {
     pub fn new() -> Self {
         Self {
-            name: ['\u{0}'; SECTOR_SIZE/16],
-            flt: [0; SECTOR_SIZE/16],
-            blt: [0; SECTOR_SIZE/16],
-            dat: [Cluster::new(0, 0); SECTOR_SIZE/32],
+            name: ['\u{0}'; SECTOR_SIZE / 16],
+            flt: [0; SECTOR_SIZE / 16],
+            blt: [0; SECTOR_SIZE / 16],
+            dat: [Cluster::new(0, 0); SECTOR_SIZE / 32],
         }
     }
 
