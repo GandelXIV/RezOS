@@ -7,12 +7,13 @@ use crate::config::SECTOR_SIZE;
 pub const SIGN_SB: u16 = 0x4321;
 pub type Addr = u32;
 
+#[repr(C)]
 pub union Node<'a> {
     pub dnode: &'a [u8],
     pub inode: &'a Inode,
 }
 
-#[derive(Serialize, Deserialize, new, Clone, Copy)]
+#[derive(Serialize, Deserialize, new, Clone, Copy, Debug)]
 pub struct Cluster {
     pub start: Addr,
     pub end: Addr,
@@ -40,6 +41,7 @@ impl SuperBlock {
 }
 
 #[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct Inode {
     name: [char; SECTOR_SIZE / 16],
     flt: [Addr; SECTOR_SIZE / 16],
