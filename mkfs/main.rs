@@ -2,10 +2,10 @@
 use bincode;
 use blocks::{Addr, Inode, Node, SuperBlock};
 use std::borrow::Borrow;
+use std::cell::RefCell;
 use std::fs::File;
 use std::io::{BufReader, Read, Write};
 use std::mem::size_of;
-use std::cell::RefCell;
 
 use crate::blocks::Cluster;
 use crate::config::SECTOR_SIZE;
@@ -76,32 +76,38 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
             let mut content = Vec::new();
             if let Ok(file) = File::open(&name) {
                 let mut buf_reader = BufReader::new(file);
-                { buf_reader.read_to_end(&mut content).unwrap(); }
+                {
+                    buf_reader.read_to_end(&mut content).unwrap();
+                }
             } else {
                 return Err(MkfsError::FileNotFound(name));
             }
-            let location = Cluster::new(1, (content.len() / SECTOR_SIZE + content.len() % SECTOR_SIZE) as Addr);
+            let location = Cluster::new(
+                1,
+                (content.len() / SECTOR_SIZE + content.len() % SECTOR_SIZE) as Addr,
+            );
             // setup inode
             let mut inode = Inode::new();
             inode.name(&name);
             inode.dat[0] = location.clone();
             inode_container.push(inode);
-            image.nodes.push( Node{ inode: &inode_container[0] } );
+            image.nodes.push(Node {
+                inode: &inode_container[0],
+            });
             // load data
-            for i in location.start .. location.end+1 {
+            for i in location.start..location.end + 1 {
                 if content.len() >= SECTOR_SIZE {
-                    dnode_container.push( content.drain(0..SECTOR_SIZE).collect::<Vec<u8>>() );
+                    dnode_container.push(content.drain(0..SECTOR_SIZE).collect::<Vec<u8>>());
                 } else {
                     let mut v = vec![0u8; SECTOR_SIZE];
                     for (i, b) in content.drain(0..content.len()).enumerate() {
                         v[i] = b;
                     }
-                    dnode_container.push( v );
-                    
+                    dnode_container.push(v);
                 }
             }
             for d in &dnode_container {
-                image.nodes.push(Node{ dnode: d });
+                image.nodes.push(Node { dnode: d });
             }
         }
         _ => return Err(MkfsError::BadConfig),
