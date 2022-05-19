@@ -1,2 +1,2 @@
 # RezOS
-An operating system writen in the rust programming language.
+A modern operating system written in the rust programming language.
