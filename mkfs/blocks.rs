@@ -1,24 +1,27 @@
-use anyhow;
 use derive_new::new;
 use serde::{Deserialize, Serialize};
 
 use crate::config::SECTOR_SIZE;
 
+// written in the SB for validation
 pub const SIGN_SB: u16 = 0x4321;
 pub type Addr = u32;
 
+// used to store dynamically allocated blcoks on the disk
 #[repr(C)]
 pub union Node<'a> {
     pub dnode: &'a [u8],
     pub inode: &'a Inode,
 }
 
+// represents an array of disk sectors
 #[derive(Serialize, Deserialize, new, Clone, Copy, Debug)]
 pub struct Cluster {
     pub start: Addr,
     pub end: Addr,
 }
 
+// root block, contains info about the fs
 #[derive(Serialize, Deserialize)]
 pub struct SuperBlock {
     pub sign: u16,
@@ -40,13 +43,14 @@ impl SuperBlock {
     }
 }
 
+// holds info about a file such as its meta-data and contents
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Inode {
-    name: [char; SECTOR_SIZE / 16],
-    flt: [Addr; SECTOR_SIZE / 16],
-    blt: [Addr; SECTOR_SIZE / 16],
-    pub dat: [Cluster; SECTOR_SIZE / 32],
+    name: [char; SECTOR_SIZE / 16],       // file name
+    flt: [Addr; SECTOR_SIZE / 16],        // front-link table
+    blt: [Addr; SECTOR_SIZE / 16],        // back-link table
+    pub dat: [Cluster; SECTOR_SIZE / 32], // dat=data allocation table
 }
 
 impl Inode {

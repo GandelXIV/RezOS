@@ -8,6 +8,7 @@ pub const DEFAULT_BLOCK_SIZE: u16 = 512;
 
 // size of disk sectors, do not change!
 pub const SECTOR_SIZE: usize = 512;
+pub const DIRECT_BOOT_TARGET: &'static str = "kernel.bin";
 
 #[derive(PartialEq)]
 pub enum Target {
@@ -20,8 +21,8 @@ pub struct Config {
     pub bootloader: Target, // stage 1 bootloader
     pub output: Target,     // currently can only be File
     pub source: Target,     // currently can only be the kernel
-    pub directboot: bool,   // creates a link to kernel in the superblock, required for current version of the bootloader
-    pub block_size: u16,    // unused setting
+    pub directboot: bool, // creates a link to kernel in the superblock, required for current version of the bootloader
+    pub block_size: u16,  // unused setting
 }
 
 // holds configuration for mkfs()

@@ -5,6 +5,7 @@ use std::fmt::Display;
 use std::fs::File;
 use std::io::{BufReader, Read, Write};
 use std::mem::size_of;
+use std::path::Path;
 
 use crate::blocks::Cluster;
 use crate::config::SECTOR_SIZE;
@@ -21,14 +22,18 @@ enum MkfsError {
 }
 
 struct MkfsReport {
-    fssize: usize,  // in bytes
+    fssize: usize, // in bytes
     inode_count: usize,
     dnode_count: usize,
 }
 
 impl Display for MkfsReport {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "[MKFS REPORT]\nSize: {}B\nInode count:{}\nDatanode count:{}\n", self.fssize, self.inode_count, self.dnode_count)
+        write!(
+            f,
+            "[MKFS REPORT]\nSize: {}B\nInode count:{}\nDatanode count:{}\n",
+            self.fssize, self.inode_count, self.dnode_count
+        )
     }
 }
 
@@ -102,8 +107,14 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
             }
             let location = Cluster::new(
                 1,
-                (content.len() / SECTOR_SIZE + (content.len() % SECTOR_SIZE > 0) as usize ) as Addr,
+                (content.len() / SECTOR_SIZE + (content.len() % SECTOR_SIZE > 0) as usize) as Addr,
             );
+            // extract name from path
+            let name = Path::new(&name).file_name().unwrap().to_str().unwrap();
+            // directboot
+            if cfg.directboot && name == config::DIRECT_BOOT_TARGET {
+                image.sb.directboot = Some(location);
+            }
             // setup inode
             let mut inode = Inode::new();
             inode.name(&name);
@@ -140,9 +151,9 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
         _ => return Err(MkfsError::BadConfig),
     }
     Ok(MkfsReport {
-        fssize: compact.len(), 
-        dnode_count: dnode_container.len(), 
-        inode_count: inode_container.len(), 
+        fssize: compact.len(),
+        dnode_count: dnode_container.len(),
+        inode_count: inode_container.len(),
     })
 }
 
