@@ -1,8 +1,7 @@
 // ENTFS => Entity file system; an entity is a file, a directory and a symlink at the same time
 use bincode;
 use blocks::{Addr, Inode, Node, SuperBlock};
-use std::borrow::Borrow;
-use std::cell::RefCell;
+use std::fmt::Display;
 use std::fs::File;
 use std::io::{BufReader, Read, Write};
 use std::mem::size_of;
@@ -17,9 +16,21 @@ mod config;
 enum MkfsError {
     BadConfig,
     FileNotFound(String),
+    EmptyBootloader,
+    InvalidInode(usize),
 }
 
-struct MkfsReport {}
+struct MkfsReport {
+    fssize: usize,  // in bytes
+    inode_count: usize,
+    dnode_count: usize,
+}
+
+impl Display for MkfsReport {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[MKFS REPORT]\nSize: {}B\nInode count:{}\nDatanode count:{}\n", self.fssize, self.inode_count, self.dnode_count)
+    }
+}
 
 struct Image<'b> {
     sb: SuperBlock,
@@ -39,7 +50,7 @@ impl<'b> Image<'b> {
     fn build(&mut self, target: &mut Vec<u8>) {
         target.append(&mut self.boot);
         target.append(&mut bincode::serialize(&self.sb).unwrap());
-        for node in self.nodes.iter() {
+        for (_dbg, node) in self.nodes.iter().enumerate() {
             unsafe {
                 for i in 0..SECTOR_SIZE {
                     target.push(node.dnode[i]);
@@ -49,6 +60,7 @@ impl<'b> Image<'b> {
     }
 }
 
+// main function
 fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
     let mut boot = Vec::new();
     match cfg.bootloader {
@@ -64,9 +76,15 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
         _ => return Err(MkfsError::BadConfig),
     }
 
+    if boot == vec![] {
+        return Err(MkfsError::EmptyBootloader);
+    }
+
     let mut image = Image::new(blocks::SuperBlock::new(1, cfg.block_size), boot);
 
-    assert_eq!(size_of::<Inode>(), SECTOR_SIZE);
+    if size_of::<Inode>() != SECTOR_SIZE {
+        return Err(MkfsError::InvalidInode(size_of::<Inode>()));
+    }
 
     let mut inode_container = vec![];
     let mut dnode_container = vec![];
@@ -84,7 +102,7 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
             }
             let location = Cluster::new(
                 1,
-                (content.len() / SECTOR_SIZE + content.len() % SECTOR_SIZE) as Addr,
+                (content.len() / SECTOR_SIZE + (content.len() % SECTOR_SIZE > 0) as usize ) as Addr,
             );
             // setup inode
             let mut inode = Inode::new();
@@ -113,18 +131,23 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
         _ => return Err(MkfsError::BadConfig),
     }
 
+    let mut compact = vec![];
     match cfg.output {
         config::Target::File(name) => {
-            let mut compact = vec![];
             image.build(&mut compact);
             File::create(&name).unwrap().write(&compact).unwrap();
         }
         _ => return Err(MkfsError::BadConfig),
     }
-    Ok(MkfsReport {})
+    Ok(MkfsReport {
+        fssize: compact.len(), 
+        dnode_count: dnode_container.len(), 
+        inode_count: inode_container.len(), 
+    })
 }
 
 fn main() {
     let cfg = config::Config::argload();
-    mkfs(cfg).unwrap();
+    let report = mkfs(cfg).unwrap();
+    println!("{}", report);
 }

@@ -7,7 +7,7 @@ EMU = qemu-system-x86_64
 EMU_ARGS = -nographic
 
 build/RezOS.bin: build/boot.bin build/mkfs.exe build/kernel.bin
-	build/mkfs.exe -b build/boot.bin -o $@
+	build/mkfs.exe
 
 build/mkfs.exe: mkfs/* Cargo.toml
 	$(CARGO) build --bin mkfs --release
@@ -22,5 +22,5 @@ clean:
 run: build/RezOS.bin
 	$(EMU) $(EMU_ARGS) build/RezOS.bin
 
-build/kernel:
+build/kernel.bin:
 	echo "no kernel for you trololol" > $@

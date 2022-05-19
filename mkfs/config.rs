@@ -1,11 +1,12 @@
 use std::env;
 
 pub const DEFAULT_BOOTLOADER: &str = "build/boot.bin";
-pub const DEFAULT_OUTPUT: &str = "build/image.bin";
+pub const DEFAULT_OUTPUT: &str = "build/RezOS.bin";
 pub const DEFAULT_SOURCE: &str = "build/kernel.bin";
 pub const DEFAULT_DIRECTBOOT: bool = true;
 pub const DEFAULT_BLOCK_SIZE: u16 = 512;
 
+// size of disk sectors, do not change!
 pub const SECTOR_SIZE: usize = 512;
 
 #[derive(PartialEq)]
@@ -16,13 +17,14 @@ pub enum Target {
 }
 
 pub struct Config {
-    pub bootloader: Target,
-    pub output: Target,
-    pub source: Target,
-    pub directboot: bool,
-    pub block_size: u16,
+    pub bootloader: Target, // stage 1 bootloader
+    pub output: Target,     // currently can only be File
+    pub source: Target,     // currently can only be the kernel
+    pub directboot: bool,   // creates a link to kernel in the superblock, required for current version of the bootloader
+    pub block_size: u16,    // unused setting
 }
 
+// holds configuration for mkfs()
 impl Config {
     pub fn default() -> Self {
         Self {
@@ -34,6 +36,7 @@ impl Config {
         }
     }
 
+    // load config from cmd line arguments
     pub fn argload() -> Self {
         let mut cfg = Self::default();
         let mut last = String::new();
