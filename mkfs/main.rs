@@ -15,10 +15,10 @@ mod config;
 
 #[derive(Debug)]
 enum MkfsError {
-    BadConfig,
+    BadConfig,              // invalid targets
     FileNotFound(String),
     EmptyBootloader,
-    InvalidInode(usize),
+    InvalidInode(usize),    // returns inode size != SECTOR_SIZE
 }
 
 struct MkfsReport {
@@ -37,6 +37,7 @@ impl Display for MkfsReport {
     }
 }
 
+// holds fs structure
 struct Image<'b> {
     sb: SuperBlock,
     boot: Vec<u8>,
@@ -52,12 +53,16 @@ impl<'b> Image<'b> {
         }
     }
 
+    // writes into raw
     fn build(&mut self, target: &mut Vec<u8>) {
+        // add BL to index0 and SB to index1
         target.append(&mut self.boot);
         target.append(&mut bincode::serialize(&self.sb).unwrap());
+        
         for (_dbg, node) in self.nodes.iter().enumerate() {
             unsafe {
                 for i in 0..SECTOR_SIZE {
+                    // access the node as a data-node and write it byte by byte
                     target.push(node.dnode[i]);
                 }
             }
@@ -81,19 +86,24 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
         _ => return Err(MkfsError::BadConfig),
     }
 
+    // check for empty bootloader
     if boot == vec![] {
         return Err(MkfsError::EmptyBootloader);
     }
 
     let mut image = Image::new(blocks::SuperBlock::new(1, cfg.block_size), boot);
 
+    // inodes must fit into exactly one 1 SECTOR
     if size_of::<Inode>() != SECTOR_SIZE {
         return Err(MkfsError::InvalidInode(size_of::<Inode>()));
     }
 
+    // containers own nodes and make sure they live long enought to be build
     let mut inode_container = vec![];
     let mut dnode_container = vec![];
+    // write files
     match cfg.source {
+        // single file => kernel
         config::Target::File(name) => {
             // prep data
             let mut content = Vec::new();
@@ -105,9 +115,13 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
             } else {
                 return Err(MkfsError::FileNotFound(name));
             }
+            // determine bounds of the data-nodes
             let location = Cluster::new(
-                1,
-                (content.len() / SECTOR_SIZE + (content.len() % SECTOR_SIZE > 0) as usize) as Addr,
+                // since we only have 1 file, sector0 is occupied by BL and sector1 is occupied by SB we can just use sector2
+                2,
+                // hacky way to compute ammount of blocks required to store the data
+                // content.len() % SECTOR_SIZE > 0 -> if there are any rests returns true, which we interpret as usize
+                2 + (content.len() / SECTOR_SIZE + (content.len() % SECTOR_SIZE > 0) as usize) as Addr,
             );
             // extract name from path
             let name = Path::new(&name).file_name().unwrap().to_str().unwrap();
@@ -118,16 +132,20 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
             // setup inode
             let mut inode = Inode::new();
             inode.name(&name);
+            // single fragment
             inode.dat[0] = location.clone();
+            // transfer ownership
             inode_container.push(inode);
             image.nodes.push(Node {
                 inode: &inode_container[0],
             });
             // load data
             for i in location.start..location.end + 1 {
+                // if true-> we can cut-out a full sector
                 if content.len() >= SECTOR_SIZE {
                     dnode_container.push(content.drain(0..SECTOR_SIZE).collect::<Vec<u8>>());
                 } else {
+                    // otherwise we need to add padding
                     let mut v = vec![0u8; SECTOR_SIZE];
                     for (i, b) in content.drain(0..content.len()).enumerate() {
                         v[i] = b;
@@ -142,6 +160,7 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
         _ => return Err(MkfsError::BadConfig),
     }
 
+    // final image
     let mut compact = vec![];
     match cfg.output {
         config::Target::File(name) => {
@@ -160,5 +179,5 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
 fn main() {
     let cfg = config::Config::argload();
     let report = mkfs(cfg).unwrap();
-    println!("{}", report);
+    println!("{}", report); // optional
 }
