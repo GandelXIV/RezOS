@@ -1,6 +1,3 @@
-; print interrupt
-INT_VIDEO equ 0x10
-
 ; string = (zero terminated char array)
 
 ; put string 
