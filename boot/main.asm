@@ -6,6 +6,7 @@ jmp real_main  ; jumping to main so that we dont execute any includes
 
 ; ========================== INCLUDES
 
+%include "boot/real/int.asm"
 %include "boot/real/io/puts.asm"
 %include "boot/real/io/nl.asm"
 
