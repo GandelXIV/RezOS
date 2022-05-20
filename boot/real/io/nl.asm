@@ -1,4 +1,4 @@
-%macro scroll 0
+%macro rscroll 0
 pusha 
 call newline
 popa

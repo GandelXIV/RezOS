@@ -13,12 +13,15 @@ use crate::config::SECTOR_SIZE;
 mod blocks;
 mod config;
 
+// Addr0 is used by BL and Addr1 is used by SB, so addr 2 is where nodes start
+const NODES_OFFSET: Addr = 2;
+
 #[derive(Debug)]
 enum MkfsError {
-    BadConfig,              // invalid targets
+    BadConfig, // invalid targets
     FileNotFound(String),
     EmptyBootloader,
-    InvalidInode(usize),    // returns inode size != SECTOR_SIZE
+    InvalidInode(usize), // returns inode size != SECTOR_SIZE
 }
 
 struct MkfsReport {
@@ -31,7 +34,7 @@ impl Display for MkfsReport {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "[MKFS REPORT]\nSize: {}B\nInode count:{}\nDatanode count:{}\n",
+            "[MKFS REPORT]\nSize: {} Bytes\nInode count:{}\nDatanode count:{}\n",
             self.fssize, self.inode_count, self.dnode_count
         )
     }
@@ -58,7 +61,7 @@ impl<'b> Image<'b> {
         // add BL to index0 and SB to index1
         target.append(&mut self.boot);
         target.append(&mut bincode::serialize(&self.sb).unwrap());
-        
+
         for (_dbg, node) in self.nodes.iter().enumerate() {
             unsafe {
                 for i in 0..SECTOR_SIZE {
@@ -118,10 +121,12 @@ fn mkfs(cfg: config::Config) -> Result<MkfsReport, MkfsError> {
             // determine bounds of the data-nodes
             let location = Cluster::new(
                 // since we only have 1 file, sector0 is occupied by BL and sector1 is occupied by SB we can just use sector2
-                2,
+                NODES_OFFSET,
                 // hacky way to compute ammount of blocks required to store the data
                 // content.len() % SECTOR_SIZE > 0 -> if there are any rests returns true, which we interpret as usize
-                2 + (content.len() / SECTOR_SIZE + (content.len() % SECTOR_SIZE > 0) as usize) as Addr,
+                NODES_OFFSET
+                    + (content.len() / SECTOR_SIZE + (content.len() % SECTOR_SIZE > 0) as usize)
+                        as Addr,
             );
             // extract name from path
             let name = Path::new(&name).file_name().unwrap().to_str().unwrap();
