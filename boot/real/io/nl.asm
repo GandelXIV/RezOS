@@ -1,5 +1,3 @@
-INT_VIDEO equ 0x10
-
 %macro scroll 0
 pusha 
 call newline
