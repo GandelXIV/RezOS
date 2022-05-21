@@ -10,8 +10,14 @@ jmp rmain  ; jumping to main so that we dont execute any includes (see below)
 %include "boot/real/io/puts.asm"
 %include "boot/real/io/nl.asm"
 %include "boot/real/mem/mmap_detect.asm"
+%include "boot/real/mem/lba_detect.asm"
 
 ; ==========================  TEXT
+
+on_lba_unsupported:
+rputsln PANIC_LBA_ADDRESSING_UNSUPPORTED
+jmp $
+
 rmain:
 
 ; ===== STAGE 1
@@ -28,9 +34,10 @@ rputsln MSG_INIT
 
 ; check for lower memory size and write it to MMAP_LOWER(from ax)
 rmmap_detect_lower
+; check for LBA addressing
+lba_detect on_lba_unsupported
 
 jmp $   ; halt
-
 ; ========================== DATA
 
 ; initialized
