@@ -2,7 +2,7 @@ org 0x7C00  ; the offset BL is loaded from
 bits 16     ; we start in real mode
 
 entry:
-jmp rmain  ; jumping to main so that we dont execute any includes
+jmp rmain  ; jumping to main so that we dont execute any includes (see below)
 
 ; ========================== INCLUDES
 
@@ -15,7 +15,7 @@ jmp rmain  ; jumping to main so that we dont execute any includes
 rmain:
 
 ; ===== STAGE 1
-mov [BOOT_DRIVE], dl  ; store for later use
+mov [BOOT_DRIVE], dl  ; store current booted drive for later use
 
 ; cleanup registers
 mov ax, 0
@@ -26,7 +26,7 @@ mov sp, 0x7C00   ; setup stack
 
 rputsln MSG_INIT
 
-; check for mmap
+; check for lower memory size and write it to MMAP_LOWER(from ax)
 rmmap_detect_lower
 
 jmp $   ; halt
@@ -38,6 +38,7 @@ jmp $   ; halt
 ; allocated
 BOOT_DRIVE db 0
 MMAP_LOWER db 0
+MMAP_UPPER db 0 ; unsupported for now
 
 ; ========================== padding and magic!
 
