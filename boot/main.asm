@@ -9,14 +9,13 @@ jmp rmain  ; jumping to main so that we dont execute any includes (see below)
 %include "boot/real/int.asm"
 %include "boot/real/io/puts.asm"
 %include "boot/real/io/nl.asm"
-%include "boot/real/mem/mmap_detect.asm"
-%include "boot/real/mem/lba_detect.asm"
 
 ; ==========================  TEXT
 
 on_lba_unsupported:
+
 rputsln PANIC_LBA_ADDRESSING_UNSUPPORTED
-jmp $
+jmp $   ; halt
 
 rmain:
 
@@ -30,12 +29,28 @@ mov es, ax
 mov ss, ax
 mov sp, 0x7C00   ; setup stack
 
+; print Init msg
 rputsln MSG_INIT
 
 ; check for lower memory size and write it to MMAP_LOWER(from ax)
-rmmap_detect_lower
+clc                     ; clear carry flag
+int INT_LOWER_MEM_SIZE  ; request
+jc .error     ; check for error
+mov [MMAP_LOWER], ax    ; save size
+jmp .continue
+
+.error:
+rputsln ERROR_CONVENTIONAL_MMAP_SIZE
+
+.continue:
+
 ; check for LBA addressing
-lba_detect on_lba_unsupported
+clc
+mov ah, 0x41
+mov bx, 0x55AA
+mov dl, 0x80
+int 0x13
+jc on_lba_unsupported
 
 jmp $   ; halt
 ; ========================== DATA
@@ -50,4 +65,4 @@ MMAP_UPPER db 0 ; unsupported for now
 ; ========================== padding and magic!
 
 times 510-($-$$) db 0 ; fill the rest of the bootsector with nulls
-dw 0AA55h   ; magic signature required to let BIOS know this disk is bootable
+dw 0xAA55   ; magic signature required to let BIOS know this disk is bootable
