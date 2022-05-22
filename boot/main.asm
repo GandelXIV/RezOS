@@ -9,17 +9,21 @@ jmp rmain  ; jumping to main so that we dont execute any includes (see below)
 %include "boot/real/int.asm"
 %include "boot/real/io/puts.asm"
 %include "boot/real/io/nl.asm"
+%include "boot/real/disk/lba_read.asm"
 
 ; ==========================  TEXT
 
+; error handlers
 on_lba_unsupported:
 
 rputsln PANIC_LBA_ADDRESSING_UNSUPPORTED
 jmp $   ; halt
 
+; =========== STAGE @2
+
+; _start equivalent
 rmain:
 
-; ===== STAGE 1
 mov [BOOT_DRIVE], dl  ; store current booted drive for later use
 
 ; cleanup registers
@@ -31,6 +35,12 @@ mov sp, 0x7C00   ; setup stack
 
 ; print Init msg
 rputsln MSG_INIT
+
+; =========== STAGE @3
+
+
+
+; =========== STAGE @4
 
 ; check for lower memory size and write it to MMAP_LOWER(from ax)
 clc                     ; clear carry flag
