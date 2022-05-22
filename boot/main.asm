@@ -14,6 +14,12 @@ jmp rmain  ; jumping to main so that we dont execute any includes (see below)
 ; ==========================  TEXT
 
 ; error handlers
+on_debug:
+
+rputsln MSG_DEBUG
+jmp $
+
+
 on_lba_unsupported:
 
 rputsln PANIC_LBA_ADDRESSING_UNSUPPORTED
@@ -38,7 +44,16 @@ rputsln MSG_INIT
 
 ; =========== STAGE @3
 
+; check for LBA addressing
+clc
+mov ah, 0x41
+mov bx, 0x55AA
+mov dl, 0x80
+int 0x13
+jc on_lba_unsupported
 
+; TODO: load kernel
+rlba_read BOOT_DRIVE, SUPERBLOCK_DAPS
 
 ; =========== STAGE @4
 
@@ -53,25 +68,30 @@ jmp .continue
 rputsln ERROR_CONVENTIONAL_MMAP_SIZE
 
 .continue:
-
-; check for LBA addressing
-clc
-mov ah, 0x41
-mov bx, 0x55AA
-mov dl, 0x80
-int 0x13
-jc on_lba_unsupported
-
 jmp $   ; halt
 ; ========================== DATA
 
 ; initialized
 %include "boot/msg.asm"
+
+SUPERBLOCK_LBA  equ 1
+SUPERBLOCK_ALLOC equ 1000
+SUPERBLOCK_DAPS:
+    sizex     db 16
+    void      db 0
+    secount   dw 1
+    buffer    dd SUPERBLOCK_ALLOC
+    lower_lba dd SUPERBLOCK_LBA
+    upper_lba dd 0
+
 ; allocated
 BOOT_DRIVE db 0
 MMAP_LOWER db 0
 MMAP_UPPER db 0 ; unsupported for now
 
+; marks end of allocated data when looking at binary
+; can be safely removed
+._cookie db 0xFF
 ; ========================== padding and magic!
 
 times 510-($-$$) db 0 ; fill the rest of the bootsector with nulls

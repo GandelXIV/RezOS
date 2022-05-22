@@ -4,7 +4,7 @@ ASM = nasm
 ASM_FORMAT = bin
 CARGO = cargo
 EMU = qemu-system-x86_64
-EMU_ARGS = -nographic
+EMU_ARGS = 
 
 build/RezOS.bin: build/boot.bin build/mkfs.exe build/kernel.bin
 	build/mkfs.exe
@@ -20,7 +20,10 @@ clean:
 	rm -f build/*
 
 run: build/RezOS.bin
-	$(EMU) $(EMU_ARGS) build/RezOS.bin
+	killall $(EMU) &	# need to kill past instances of EMU so we dont connect to them accidentally
+	$(EMU) $(EMU_ARGS) build/RezOS.bin &
+	sleep 0.1
+	vncviewer vncviewer 127.0.0.1:5900
 
 build/kernel.bin:
 	echo "no kernel for you trololol" > $@
