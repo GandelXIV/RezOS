@@ -10,6 +10,8 @@ jmp rmain  ; jumping to main so that we dont execute any includes (see below)
 %include "boot/real/io/puts.asm"
 %include "boot/real/io/nl.asm"
 %include "boot/real/disk/lba_read.asm"
+%include "boot/real/abort.asm"
+%include "boot/real/io/putd.asm"
 
 ; ==========================  TEXT
 
@@ -17,13 +19,12 @@ jmp rmain  ; jumping to main so that we dont execute any includes (see below)
 on_debug:
 
 rputsln MSG_DEBUG
-jmp $
-
+rabort
 
 on_lba_unsupported:
 
-rputsln PANIC_LBA_ADDRESSING_UNSUPPORTED
-jmp $   ; halt
+rputsln ERROR_LBA_ADDRESSING_UNSUPPORTED
+rabort
 
 ; =========== STAGE @2
 
@@ -53,7 +54,8 @@ int 0x13
 jc on_lba_unsupported
 
 ; TODO: load kernel
-rlba_read BOOT_DRIVE, SUPERBLOCK_DAPS
+;rputd 50000
+jmp on_debug
 
 ; =========== STAGE @4
 
@@ -71,6 +73,11 @@ rputsln ERROR_CONVENTIONAL_MMAP_SIZE
 jmp $   ; halt
 ; ========================== DATA
 
+; allocated
+BOOT_DRIVE db 0
+MMAP_LOWER db 0
+MMAP_UPPER db 0 ; unsupported for now
+
 ; initialized
 %include "boot/msg.asm"
 
@@ -84,10 +91,6 @@ SUPERBLOCK_DAPS:
     lower_lba dd SUPERBLOCK_LBA
     upper_lba dd 0
 
-; allocated
-BOOT_DRIVE db 0
-MMAP_LOWER db 0
-MMAP_UPPER db 0 ; unsupported for now
 
 ; marks end of allocated data when looking at binary
 ; can be safely removed
