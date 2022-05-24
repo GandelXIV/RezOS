@@ -54,8 +54,6 @@ int 0x13
 jc on_lba_unsupported
 
 ; TODO: load kernel
-;rputd 50000
-jmp on_debug
 
 ; =========== STAGE @4
 

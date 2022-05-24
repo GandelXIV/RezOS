@@ -1,4 +1,4 @@
-N_TO_ASCII_DIFF equ 48  ; int(n + this = 
+N_TO_ASCII_DIFF equ 48  ; int(n) + this = char(n)
 
 ; args: 16bit number
 %macro rputd 1
@@ -20,8 +20,9 @@ mov ah, 0x0E            ; print config
 int INT_VIDEO
 mov ax, dx              ; move rest to ax so it can be reused in the next iteration
 mov dx, 0               ; reset dx
-cmp bx, RPUTD_SELECTORS + 4 ; check if all selectors have been used
+cmp bx, RPUTD_SELECTORS + 8 ; check if all selectors have been used
 je rputd_end
+inc bx
 inc bx
 jmp rputd_loop
 
@@ -31,4 +32,4 @@ ret
 
 ; immutable data
 
-RPUTD_SELECTORS dw 10000, 01000, 00100, 00010, 000001
+RPUTD_SELECTORS dw 10000, 1000, 100, 10, 1
