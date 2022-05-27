@@ -16,14 +16,12 @@ jmp rmain  ; jumping to main so that we dont execute any includes (see below)
 
 ; error handlers
 on_debug:
-
-rputsln MSG_DEBUG
-rabort
+    rputsln MSG_DEBUG
+    rabort
 
 on_lba_unsupported:
-
-rputsln ERROR_LBA_ADDRESSING_UNSUPPORTED
-rabort
+    rputsln ERROR_LBA_ADDRESSING_UNSUPPORTED
+    rabort
 
 ; =========== STAGE @2
 
