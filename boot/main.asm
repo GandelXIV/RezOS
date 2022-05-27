@@ -11,6 +11,7 @@ jmp rmain  ; jumping to main so that we dont execute any includes (see below)
 %include "boot/real/io/putd.asm"
 %include "boot/real/io/nl.asm"
 %include "boot/real/abort.asm"
+%include "boot/real/disk/disk_chs.asm"
 
 ; ==========================  TEXT
 
@@ -43,6 +44,8 @@ rputsln MSG_INIT
 ; =========== STAGE @3
 
 ; TODO: load kernel
+chs_get BOOT_DRIVE, HEAD_COUNT, SEC_PER_TRACK
+
 
 ; =========== STAGE @4
 
@@ -64,6 +67,8 @@ jmp $   ; halt
 BOOT_DRIVE db 0
 MMAP_LOWER db 0
 MMAP_UPPER db 0 ; unsupported for now
+SEC_PER_TRACK dw 0
+HEAD_COUNT dw 0
 
 ; initialized
 %include "boot/msg.asm"
@@ -72,7 +77,7 @@ SUPERBLOCK_LBA  equ 1
 SUPERBLOCK_ALLOC equ 0x10000
 SUPERBLOCK_DAPS:
     sizex     db 16
-    void      db 0
+    .void     db 0
     secount   dw 1
     buffer    dd SUPERBLOCK_ALLOC
     lba       dq SUPERBLOCK_LBA
