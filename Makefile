@@ -14,7 +14,7 @@ build/mkfs.exe: mkfs/* Cargo.toml
 	$(CARGO) build --bin mkfs --release
 	cp target/release/mkfs $@
 
-build/boot.bin: $(find . -name boot\*.asm -print)
+build/boot.bin: $(shell find boot/ -name "*.asm" -print)
 	$(ASM) -f $(ASM_FORMAT) boot/main.asm -o $@
 
 clean:
