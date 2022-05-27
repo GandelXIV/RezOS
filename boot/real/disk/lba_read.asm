@@ -6,9 +6,22 @@
 ; dd  lower_lba -> lower 32 bits of starting LBA
 ; dd  upper_lba -> upper 16 bits of starting LBA
 
+; reads disk
+; args: 1=volume, 2=DAPS addr
 %macro rlba_read 2
 mov ds:si, dword %2
 mov ah, 0x42
 mov dl, %1
 int INT_DISK
+%endmacro
+
+; check for LBA support, may not work
+; args: 1=ptr to event function
+%macro lba_check 1
+clc
+mov ah, 0x41
+mov bx, 0x55AA
+mov dl, 0x80
+int 0x13
+jc %1
 %endmacro

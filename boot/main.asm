@@ -8,10 +8,9 @@ jmp rmain  ; jumping to main so that we dont execute any includes (see below)
 
 %include "boot/real/int.asm"
 %include "boot/real/io/puts.asm"
-%include "boot/real/io/nl.asm"
-%include "boot/real/disk/lba_read.asm"
-%include "boot/real/abort.asm"
 %include "boot/real/io/putd.asm"
+%include "boot/real/io/nl.asm"
+%include "boot/real/abort.asm"
 
 ; ==========================  TEXT
 
@@ -45,14 +44,6 @@ rputsln MSG_INIT
 
 ; =========== STAGE @3
 
-; check for LBA addressing
-clc
-mov ah, 0x41
-mov bx, 0x55AA
-mov dl, 0x80
-int 0x13
-jc on_lba_unsupported
-
 ; TODO: load kernel
 
 ; =========== STAGE @4
@@ -80,14 +71,13 @@ MMAP_UPPER db 0 ; unsupported for now
 %include "boot/msg.asm"
 
 SUPERBLOCK_LBA  equ 1
-SUPERBLOCK_ALLOC equ 1000
+SUPERBLOCK_ALLOC equ 0x10000
 SUPERBLOCK_DAPS:
     sizex     db 16
     void      db 0
     secount   dw 1
     buffer    dd SUPERBLOCK_ALLOC
-    lower_lba dd SUPERBLOCK_LBA
-    upper_lba dd 0
+    lba       dq SUPERBLOCK_LBA
 
 
 ; marks end of allocated data when looking at binary
