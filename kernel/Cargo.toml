@@ -13,6 +13,6 @@ panic = "abort"
 
 [lib]
 name = "kernel"
-path = "kernel/main.rs"
+path = "src/main.rs"
 
 [dependencies]
