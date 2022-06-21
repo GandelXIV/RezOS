@@ -4,11 +4,13 @@ A modern operating system written in the rust programming language.
 0. Prerequisite: Linux with bash
 1. Clone the repo
 `git clone https://www.github.com/GandelXIV/RezOS.git`
-2. Install the following dependencies:
-`make nasm rust cargo qemu`
-3. Configure either manually or with:
+2. Update git submodules
+`git submodule update`
+3. Install the following dependencies:
+`make nasm rust cargo qemu gcc`
+4. Configure either manually or with:
 `./configure.sh`
-4. Build
+5. Build
 `make`
-5. Run with emulator
+6. Run with emulator
 `make run`
