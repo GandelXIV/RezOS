@@ -1,3 +1,6 @@
-/target
+/kernel/target
+/plexusFS/target
+/plexusFS/fs.bin
 /build
 /lab
+/initrd/*

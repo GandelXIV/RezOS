@@ -1,33 +1,34 @@
-.PHONY: clean run
+.PHONY: clean all run check
 
-ASM = nasm
-ASM_FORMAT = bin
-CARGO = cargo
-EMU = qemu-system-x86_64
-EMU_ARGS_GRAPHIC = 
-EMU_ARGS_CMD = -nographic
+# https://stackoverflow.com/questions/2483182/recursive-wildcards-in-gnu-make
+rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 
-build/RezOS.bin: build/boot.bin build/mkfs.exe build/kernel.bin
-	build/mkfs.exe
+MKBOOTIMG = bootboot/mkbootimg/mkbootimg
 
-build/mkfs.exe: mkfs/* Cargo.toml
-	$(CARGO) build --bin mkfs --release
-	cp target/release/mkfs $@
+build/RezOS.bin: build/initrd.bin mkbootimg.json $(MKBOOTIMG)
+	$(MKBOOTIMG) mkbootimg.json $@
 
-build/boot.bin: $(shell find boot/ -name "*.asm" -print)
-	$(ASM) -f $(ASM_FORMAT) boot/main.asm -o $@
+build/initrd.bin: initrd/kernel.bin $(wildcard initrd/*)
+	cd plexusFS/ && cargo run
+
+initrd/kernel.bin: build/kernel.bin
+	cp $< $@
+
+build/kernel.bin: build/kentry.o $(wildcard kernel/* kernel/src/* kernel/.cargo/* kernel/triple/*)
+	cd kernel/ && cargo build --target triple/x86_64.json --release
+	ld -T kernel/kernel.ld $< kernel/target/x86_64/release/libkernel.rlib -o $@
+	
+build/kentry.o: kernel/kentry/kentry.asm
+	nasm -f elf64 $^ -o $@
+
+
+check: build/kernel.bin
+	$(MKBOOTIMG) check $<
+
+all: check build/RezOS.bin
+
+run: build/RezOS.bin
+	qemu-system-x86_64 $^
 
 clean:
 	rm -f build/*
-
-run: build/RezOS.bin
-	$(EMU) $(EMU_ARGS_CMD) build/RezOS.bin
-
-run-graphic: build/RezOS.bin
-	killall $(EMU) &	# need to kill past instances of EMU so we dont connect to them accidentally
-	$(EMU) $(EMU_ARGS_GRAPHIC) build/RezOS.bin &
-	sleep 0.1
-	vncviewer vncviewer 127.0.0.1:5900
-
-build/kernel.bin:
-	echo "no kernel for you trololol" > $@
