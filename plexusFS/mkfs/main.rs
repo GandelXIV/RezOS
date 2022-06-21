@@ -4,9 +4,8 @@ use std::io::{Read, Write};
 use std::mem::size_of;
 use std::ops::Add;
 use std::path::{self, Path, PathBuf};
-use std::{any, fs};
 use std::ptr;
-
+use std::{any, fs};
 
 type Addr = u32; // LBA addressing for disk sectors
 
@@ -22,8 +21,8 @@ struct Config {
 impl Config {
     fn default() -> Self {
         Self {
-            input: String::from("initrd/"),
-            output: String::from("fs.bin"),
+            input: String::from("../initrd/"),
+            output: String::from("../build/initrd.bin"),
             max_file_count: 1024,
             init_file_size: SECTOR_SIZE,
         }
@@ -125,7 +124,7 @@ fn mkfs(cfg: &Config) -> Vec<u8> {
             .unwrap();
         // align data to SECTOR_SIZE by appending an empty buffer to content
         content.append(&mut vec![0_u8; SECTOR_SIZE - content.len() % SECTOR_SIZE]);
-        
+
         // link to apex
         inode.blt[0] = 1; // back link current file to the apex (root)
         fat[0].flt[fid] = fid as u32 + 2; // front link apex to current file
@@ -141,9 +140,11 @@ fn mkfs(cfg: &Config) -> Vec<u8> {
 
     // build the image
     let mut image: Vec<u8> = Vec::new();
-    
+
     image.append(&mut conver2sector(head));
-    for inode in fat { image.append(&mut conver2sector(inode)); }
+    for inode in fat {
+        image.append(&mut conver2sector(inode));
+    }
     image.append(&mut dat);
 
     image
@@ -152,7 +153,10 @@ fn mkfs(cfg: &Config) -> Vec<u8> {
 fn main() {
     let cfg = Config::default();
     let image = mkfs(&cfg);
-    fs::File::create(cfg.output).unwrap().write_all(&image).unwrap(); 
+    fs::File::create(cfg.output)
+        .unwrap()
+        .write_all(&image)
+        .unwrap();
 
     println!("Done!");
 }

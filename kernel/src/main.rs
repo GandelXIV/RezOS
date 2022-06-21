@@ -8,12 +8,15 @@ fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
 
-
 #[no_mangle]
 pub extern "C" fn kmain() {
-    let vga = 0xB8000 as *mut char;
-    unsafe {
-        *vga = 'X';
+    let fb: usize = 0xFFFFFFFFFC000000;
+    let bar = 3200;
+    for x in 0..bar * 100 {
+        let pixel = (fb + x) as *mut u32;
+        unsafe {
+            *pixel = 0x00FFFFFF;
+        }
     }
     loop {}
 }
