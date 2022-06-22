@@ -21,7 +21,7 @@ build/kernel.bin: build/kentry.o $(wildcard kernel/* kernel/src/* kernel/.cargo/
 build/kentry.o: kernel/kentry/kentry.asm
 	nasm -f elf64 $^ -o $@
 
-$(MKBOOTIMG): $(wildcard bootboot/mkbootimg/*)
+$(MKBOOTIMG):
 	cd bootboot/mkbootimg && make
 
 check: build/kernel.bin
