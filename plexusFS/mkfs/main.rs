@@ -9,13 +9,13 @@ use std::{any, fs};
 
 type Addr = u32; // LBA addressing for disk sectors
 
-const SECTOR_SIZE: usize = 512;
+const SECTOR_SIZE: usize = 512; // same as block size
 
 struct Config {
-    input: String,
-    output: String,
-    max_file_count: Addr,
-    init_file_size: usize,
+    input: String,  // input dir path
+    output: String, // output file path
+    max_file_count: Addr,   // size of FAT
+    init_file_size: usize,  // unused
 }
 
 impl Config {
@@ -29,6 +29,7 @@ impl Config {
     }
 }
 
+// represents a memory area
 #[derive(new, Clone, Copy, Debug)]
 struct Chunk {
     start: Addr,
@@ -45,10 +46,11 @@ const HEAD_MAGIC_SIZE: usize = 4;
 const HEAD_PADDDING_SIZE: usize = 478;
 const HEAD_DAT_MAX_SIZE: Addr = 10000;
 
+// equivalent to the Super Block in other FS
 #[repr(C, packed)]
 struct Head {
     version: u16,                   // 1
-    magic: [char; HEAD_MAGIC_SIZE], // 'head'
+    magic: [char; HEAD_MAGIC_SIZE], // always 'head'
     fat: Chunk,                     // = file allocation table
     dat: Chunk,                     // = data alloaction table
     _pad: [u8; HEAD_PADDDING_SIZE], // void
@@ -63,9 +65,9 @@ const INODE_FRAGS_SIZE: usize = 6;
 #[repr(C, packed)]
 struct Inode {
     name: [u8; INODE_NAME_SIZE],      // file name
-    flt: [Addr; INODE_FLT_SIZE],      // front link table
-    blt: [Addr; INODE_BLT_SIZE],      // back link table
-    frags: [Chunk; INODE_FRAGS_SIZE], // data fragments
+    flt: [Addr; INODE_FLT_SIZE],      // front link table [subfiles]
+    blt: [Addr; INODE_BLT_SIZE],      // back link table [supfiles]
+    frags: [Chunk; INODE_FRAGS_SIZE], // data fragments [content]
 }
 
 impl Inode {
@@ -81,10 +83,13 @@ impl Inode {
     }
 }
 
+// read T as raw bin
 fn conver2sector<T>(n: T) -> Vec<u8> {
+    assert_eq!(std::mem::size_of::<T>(), SECTOR_SIZE);  // safety check
     Vec::from(unsafe { *(ptr::addr_of!(n) as *const [u8; SECTOR_SIZE]) })
 }
 
+// main function
 fn mkfs(cfg: &Config) -> Vec<u8> {
     // check if components have exact size of disk sector
     assert_eq!(std::mem::size_of::<Inode>(), SECTOR_SIZE);
@@ -101,7 +106,7 @@ fn mkfs(cfg: &Config) -> Vec<u8> {
         ),
         _pad: [0; HEAD_PADDDING_SIZE],
     };
-    let mut fat = vec![Inode::new(&[b'/'])];
+    let mut fat = vec![Inode::new(&[b'/'])];    // empty fat with the apex(root)
     let mut dat: Vec<u8> = Vec::new();
 
     // writing files from input > target (no recusion support currently)
@@ -122,6 +127,7 @@ fn mkfs(cfg: &Config) -> Vec<u8> {
             .unwrap()
             .read_to_end(&mut content)
             .unwrap();
+
         // align data to SECTOR_SIZE by appending an empty buffer to content
         content.append(&mut vec![0_u8; SECTOR_SIZE - content.len() % SECTOR_SIZE]);
 
@@ -145,6 +151,7 @@ fn mkfs(cfg: &Config) -> Vec<u8> {
     for inode in fat {
         image.append(&mut conver2sector(inode));
     }
+    
     image.append(&mut dat);
 
     image

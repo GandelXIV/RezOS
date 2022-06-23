@@ -3,4 +3,4 @@ section .text
 [extern kmain]
 global _start
 _start:
-jmp kmain
+jmp kmain   ; main function linked from kernel.rs
