@@ -12,7 +12,7 @@ build/initrd.bin: initrd/kernel.bin $(wildcard initrd/*)
 	cd plexusFS/ && cargo run
 
 initrd/kernel.bin: build/kernel.bin
-	cp $< $@
+	ln -f $< $@
 
 build/kernel.bin: build/kentry.o $(wildcard kernel/* kernel/src/* kernel/.cargo/* kernel/triple/*)
 	cd kernel/ && cargo build --target triple/x86_64.json --release
@@ -34,3 +34,4 @@ run: build/RezOS.bin
 
 clean:
 	rm -f build/*
+	rm -f initrd/kernel.bin
