@@ -14,7 +14,7 @@ build/initrd.bin: initrd/kernel.bin $(wildcard initrd/*)
 initrd/kernel.bin: build/kernel.bin
 	ln -f $< $@
 
-build/kernel.bin: build/kentry.o $(wildcard kernel/* kernel/src/* kernel/.cargo/* kernel/triple/*)
+build/kernel.bin: build/kentry.o $(wildcard kernel/* kernel/src/* kernel/src/io/* kernel/.cargo/* kernel/triple/*)
 	cd kernel/ && cargo build --target triple/x86_64.json --release
 	ld -T kernel/kernel.ld $< kernel/target/x86_64/release/libkernel.rlib -o $@
 	
