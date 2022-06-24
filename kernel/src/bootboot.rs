@@ -18,12 +18,11 @@ pub const MMAP_ACPI: u32 = 2;
 pub const MMAP_MMIO: u32 = 3;
 pub const INITRD_MAXSIZE: u32 = 16;
 
-pub const BOOTBOOT_MMIO: u64 = 0xfffffffff8000000;  /* memory mapped IO virtual address */
-pub const BOOTBOOT_FB: u64 = 0xfffffffffc000000;  /* frame buffer virtual address */
-pub const BOOTBOOT_INFO: u64 = 0xffffffffffe00000;  /* bootboot struct virtual address */
-pub const BOOTBOOT_ENV: u64 = 0xffffffffffe01000;  /* environment string virtual address */
-pub const BOOTBOOT_CORE: u64 = 0xffffffffffe02000;  /* core loadable segment start */
-
+pub const BOOTBOOT_MMIO: u64 = 0xfffffffff8000000; /* memory mapped IO virtual address */
+pub const BOOTBOOT_FB: u64 = 0xfffffffffc000000; /* frame buffer virtual address */
+pub const BOOTBOOT_INFO: u64 = 0xffffffffffe00000; /* bootboot struct virtual address */
+pub const BOOTBOOT_ENV: u64 = 0xffffffffffe01000; /* environment string virtual address */
+pub const BOOTBOOT_CORE: u64 = 0xffffffffffe02000; /* core loadable segment start */
 
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -35,14 +34,14 @@ pub struct MMapEnt {
 #[repr(C, packed)]
 #[derive(Copy, Clone)]
 pub struct BOOTBOOT {
-    pub magic: [u8; 4usize],
-    pub size: u32,
+    pub magic: [u8; 4usize], // equal to $BOOTBOOT_MAGIC
+    pub size: u32,           // size of this struct
     pub protocol: u8,
     pub fb_type: u8,
-    pub numcores: u16,
-    pub bspid: u16,
-    pub timezone: i16,
-    pub datetime: [u8; 8usize],
+    pub numcores: u16,          // number of cpu cores
+    pub bspid: u16,             // boot strap processor id
+    pub timezone: i16,          // stored as an int in minutes +-1440
+    pub datetime: [u8; 8usize], // read in hex, YYMDHNS0 (not influenced by the timezone!)
     pub initrd_ptr: u64,
     pub initrd_size: u64,
     pub fb_ptr: *mut u8,
@@ -51,9 +50,8 @@ pub struct BOOTBOOT {
     pub fb_height: u32,
     pub fb_scanline: u32,
     pub arch: arch_union,
-    pub mmap: MMapEnt,
+    pub mmap: MMapEnt, // memory map
 }
-
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -75,7 +73,6 @@ pub struct arch_x86 {
     pub unused2: u64,
     pub unused3: u64,
 }
-
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
