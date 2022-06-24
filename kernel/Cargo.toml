@@ -16,3 +16,5 @@ name = "kernel"
 path = "src/main.rs"
 
 [dependencies]
+rlibc = "1.0.0"
+tinybmp = "0.3.3"

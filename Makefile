@@ -30,7 +30,7 @@ check: build/kernel.bin
 all: check build/RezOS.bin
 
 run: build/RezOS.bin
-	qemu-system-x86_64 $^
+	qemu-system-x86_64 -serial file:log/serial.log $^
 
 clean:
 	rm -f build/*
