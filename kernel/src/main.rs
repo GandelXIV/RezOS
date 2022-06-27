@@ -15,8 +15,8 @@ mod bootboot;
 mod io;
 
 use bootboot::*;
-use io::serial;
 use io::console;
+use io::serial;
 
 fn slicecmp<T: core::cmp::PartialEq>(x: &[T], y: &[T]) -> bool {
     if x.len() != y.len() {
@@ -41,8 +41,8 @@ pub extern "C" fn kmain() {
     serial::init();
     console::init();
 
-    let mut mycon = console::SerialConsole{};
-    mycon.puts("Yo man");
+    let mut mycon = console::SerialConsole {};
+    mycon.puts("Connected to serial debug from kernel\n");
 
     // draw white rect
     let fb: usize = 0xFFFFFFFFFC000000;

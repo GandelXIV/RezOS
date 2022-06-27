@@ -12,10 +12,10 @@ type Addr = u32; // LBA addressing for disk sectors
 const SECTOR_SIZE: usize = 512; // same as block size
 
 struct Config {
-    input: String,  // input dir path
-    output: String, // output file path
-    max_file_count: Addr,   // size of FAT
-    init_file_size: usize,  // unused
+    input: String,         // input dir path
+    output: String,        // output file path
+    max_file_count: Addr,  // size of FAT
+    init_file_size: usize, // unused
 }
 
 impl Config {
@@ -85,7 +85,7 @@ impl Inode {
 
 // read T as raw bin
 fn conver2sector<T>(n: T) -> Vec<u8> {
-    assert_eq!(std::mem::size_of::<T>(), SECTOR_SIZE);  // safety check
+    assert_eq!(std::mem::size_of::<T>(), SECTOR_SIZE); // safety check
     Vec::from(unsafe { *(ptr::addr_of!(n) as *const [u8; SECTOR_SIZE]) })
 }
 
@@ -106,7 +106,7 @@ fn mkfs(cfg: &Config) -> Vec<u8> {
         ),
         _pad: [0; HEAD_PADDDING_SIZE],
     };
-    let mut fat = vec![Inode::new(&[b'/'])];    // empty fat with the apex(root)
+    let mut fat = vec![Inode::new(&[b'/'])]; // empty fat with the apex(root)
     let mut dat: Vec<u8> = Vec::new();
 
     // writing files from input > target (no recusion support currently)

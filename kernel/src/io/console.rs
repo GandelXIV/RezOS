@@ -1,8 +1,6 @@
 use super::serial;
 
-pub fn init() {
-    
-}
+pub fn init() {}
 
 pub trait Console {
     fn puts(&mut self, s: &str);
