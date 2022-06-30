@@ -12,6 +12,7 @@ panic = "abort"
 panic = "abort"
 
 [lib]
+crate-type = ["staticlib"]
 name = "kernel"
 path = "src/main.rs"
 

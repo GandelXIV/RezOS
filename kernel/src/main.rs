@@ -1,5 +1,8 @@
 #![no_std]
 #![no_main]
+#![feature(core_panic)]
+#![crate_type = "staticlib"]
+
 
 use core::panic::{self, PanicInfo};
 use io::console::Console;
@@ -7,7 +10,7 @@ use rlibc;
 use x86;
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(pi: &core::panic::PanicInfo<'_>) -> ! {
     loop {}
 }
 

@@ -5,21 +5,14 @@ const COMMON_COM1: u16 = 0x3F8;
 
 static mut SERIAL: [Option<SerialHandle>; 8] = [None; 8];
 
-fn unwrap<T>(x: Option<T>) -> T {
-    return match x {
-        Some(data) => data,
-        None => loop {},
-    }
-}
-
 pub fn init() {
     // bootboot setups serial debug on COM1
     unsafe { SERIAL[0] = Some(SerialHandle{ port: COMMON_COM1 }) };
 }
 
 pub fn access(comport: usize) -> SerialHandle {
-    let h = replace(&mut unsafe { *unwrap(SERIAL.get(comport - 1)) }, None);
-    unwrap(h)
+    let h = replace(&mut unsafe { *SERIAL.get(comport - 1).unwrap() }, None);
+    h.unwrap()
 }
 
 #[derive(Clone, core::marker::Copy)]
