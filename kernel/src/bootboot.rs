@@ -33,7 +33,7 @@ pub struct MMapEnt {
 
 #[repr(C, packed)]
 #[derive(Copy, Clone)]
-pub struct BOOTBOOT {
+pub struct BOOTBOOT_HEADER {
     pub magic: [u8; 4usize], // equal to $BOOTBOOT_MAGIC
     pub size: u32,           // size of this struct
     pub protocol: u8,
