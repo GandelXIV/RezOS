@@ -16,6 +16,7 @@ fn kpanic(pi: &core::panic::PanicInfo<'_>) -> ! {
 
 
 mod bootboot;
+mod arch;
 mod io;
 
 use bootboot::*;

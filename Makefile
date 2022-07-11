@@ -36,7 +36,7 @@ build/initrd.bin: initrd/kernel.bin $(wildcard initrd/*)
 initrd/kernel.bin: build/kernel.bin
 	ln -f $< $@
 
-build/kernel.bin: build/kentry.o $(wildcard kernel/* kernel/src/* kernel/src/io/* kernel/.cargo/* kernel/triple/*)
+build/kernel.bin: build/kentry.o $(wildcard kernel/* kernel/src/* kernel/src/io/* kernel/src/arch/* kernel/.cargo/* kernel/triple/*)
 	cd kernel/ && cargo build --target triple/$(KERNEL_TRIPLE).json --lib $(KERNEL_BUILD_PROFILE)
 	ld -T kernel/kernel.ld $< $(LIBKERNEL_PATH) -o $@
 	

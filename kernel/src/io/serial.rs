@@ -1,9 +1,9 @@
 use crate::bootboot::BOOTBOOT_HEADER;
+use crate::arch;
 use core::marker::Copy;
 use core::mem;
 use lazy_static::lazy_static;
 use spin::Mutex;
-use x86::io;
 
 pub const COMMON_COM1: u16 = 0x3F8;
 
@@ -56,7 +56,7 @@ pub struct SerialHandle {
 impl SerialHandle {
     pub fn write_byte(&self, b: u8) {
         unsafe {
-            x86::io::outb(self.ioport, b);
+            arch::portio::output_byte(self.ioport, b);
         }
     }
 }
