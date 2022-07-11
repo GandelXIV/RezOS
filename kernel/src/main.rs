@@ -3,22 +3,22 @@
 #![feature(core_panic)]
 #![crate_type = "staticlib"]
 
-
 use core::panic::{self, PanicInfo};
-use io::console::Console;
 use rlibc;
 use x86;
 
+// TODO: debug this
 #[panic_handler]
-fn panic(pi: &core::panic::PanicInfo<'_>) -> ! {
+#[no_mangle]
+fn kpanic(pi: &core::panic::PanicInfo<'_>) -> ! {
     loop {}
 }
+
 
 mod bootboot;
 mod io;
 
 use bootboot::*;
-use io::console;
 use io::serial;
 
 fn slicecmp<T: core::cmp::PartialEq>(x: &[T], y: &[T]) -> bool {
@@ -33,26 +33,41 @@ fn slicecmp<T: core::cmp::PartialEq>(x: &[T], y: &[T]) -> bool {
     true
 }
 
+// regular .unwrap() triple faults for some reason, so use this tmp
+
+fn unwrap_opt<T>(opt: Option<T>) -> T {
+    match opt {
+        Some(data) => data,
+        None => panic!(),
+    }
+}
+
+fn unwrap_res<T, U>(res: Result<T, U>) -> T {
+    match res {
+        Ok(data) => data,
+        Err(e) => panic!(),
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn kmain() {
     // bootboot init
     let bootboot = &unsafe { *(BOOTBOOT_INFO as *const BOOTBOOT_HEADER) };
     if !slicecmp(&bootboot.magic, BOOTBOOT_MAGIC) {
-        loop {}
+        panic!()
     }
+
     // io init
-    serial::init();
-    console::init();
-
-    let mut log = console::SerialConsole{};
-    log.puts("Connected to serial debug from kernel\n");
-
-    // draw white rect
-    let fb: usize = 0xFFFFFFFFFC000000;
-    let bar = 3200;
-    for x in 0..bar * 100 {
-        let pixel = (fb + x) as *mut u32;
-        unsafe { *pixel = 0x00FFFFFF }
+    
+    // serial 
+    let mut log;
+    match serial::init(bootboot) {
+        Ok(_) => {
+            log = unwrap_res(serial::access(1));
+        }
+        Err(e) => panic!(),
     }
+    log.write_byte(65);
+
     loop {}
 }
