@@ -59,4 +59,10 @@ impl SerialHandle {
             arch::portio::output_byte(self.ioport, b);
         }
     }
+
+    pub fn write_str(&self, s: &str) {
+        for b in s.bytes() {
+            self.write_byte(b);
+        }
+    }
 }

@@ -68,7 +68,7 @@ pub extern "C" fn kmain() {
         }
         Err(e) => panic!(),
     }
-    log.write_byte(65);
+    log.write_str("Hello kernel world!\n");
 
     loop {}
 }
