@@ -1,19 +1,16 @@
 #![no_std]
 #![no_main]
-#![feature(core_panic)]
 #![crate_type = "staticlib"]
 
 use core::panic::{self, PanicInfo};
 use rlibc;
-use x86;
 
-// TODO: debug this
+
 #[panic_handler]
-#[no_mangle]
 fn kpanic(pi: &core::panic::PanicInfo<'_>) -> ! {
+    unsafe { arch::cpu::halt(); }
     loop {}
 }
-
 
 mod bootboot;
 mod arch;
@@ -57,10 +54,11 @@ pub extern "C" fn kmain() {
     if !slicecmp(&bootboot.magic, BOOTBOOT_MAGIC) {
         panic!()
     }
-
-    // io init
     
-    // serial 
+    arch::init();
+    // io init
+   
+    // serial
     let mut log;
     match serial::init(bootboot) {
         Ok(_) => {
@@ -68,7 +66,8 @@ pub extern "C" fn kmain() {
         }
         Err(e) => panic!(),
     }
+    
     log.write_str("Hello kernel world!\n");
-
+    
     loop {}
 }

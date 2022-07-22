@@ -60,6 +60,12 @@ impl SerialHandle {
         }
     }
 
+    pub fn write_char(&self, c: char) {
+        unsafe {
+            arch::portio::output_long(self.ioport, c.into())
+        }
+    }
+
     pub fn write_str(&self, s: &str) {
         for b in s.bytes() {
             self.write_byte(b);
