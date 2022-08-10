@@ -54,20 +54,19 @@ pub extern "C" fn kmain() {
     if !slicecmp(&bootboot.magic, BOOTBOOT_MAGIC) {
         panic!()
     }
-    
+
+    // arch init
     arch::init();
-    // io init
-   
-    // serial
+
+    // serial init
     let mut log;
     match serial::init(bootboot) {
         Ok(_) => {
             log = unwrap_res(serial::access(1));
+            log.write_str("Hello kernel world!\n");
         }
         Err(e) => panic!(),
     }
-    
-    log.write_str("Hello kernel world!\n");
-    
+
     loop {}
 }
