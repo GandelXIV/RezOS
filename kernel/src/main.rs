@@ -3,6 +3,7 @@
 #![crate_type = "staticlib"]
 
 use core::panic::{self, PanicInfo};
+// Do not remove this import, it prevents link errors
 use rlibc;
 
 

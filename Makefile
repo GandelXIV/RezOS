@@ -1,5 +1,3 @@
-.PHONY: clean all run check
-
 ############ DEFS
 
 # https://stackoverflow.com/questions/2483182/recursive-wildcards-in-gnu-make
@@ -40,9 +38,9 @@ build/kernel.bin: build/kentry.o $(wildcard kernel/* kernel/src/* kernel/src/io/
 	cd kernel/ && cargo build --target triple/$(KERNEL_TRIPLE).json --lib $(KERNEL_BUILD_PROFILE)
 	ld -T kernel/kernel.ld $< $(LIBKERNEL_PATH) -o $@
 	
+
 build/kentry.o: kernel/kentry/kentry.asm
 	nasm -f elf64 $^ -o $@
-
 log/buildflow.png: $(MAKEFILE2GRAPH) Makefile
 	make -Bnd | $(MAKEFILE2GRAPH) -r | dot -Tpng -o $@
 
@@ -54,6 +52,8 @@ $(MAKEFILE2GRAPH):
 	cd makefile2graph && make
 
 ############ PHONY
+
+.PHONY: check all run clean deep-clean
 
 check: build/kernel.bin $(MKBOOTIMG)
 	# Check if kernel is bootable
