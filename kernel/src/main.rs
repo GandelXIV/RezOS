@@ -58,6 +58,7 @@ pub extern "C" fn kmain() {
 
     // arch init
     arch::init();
+    unsafe { arch::interrupt::irq_disable(); }
 
     // serial init
     let mut log;

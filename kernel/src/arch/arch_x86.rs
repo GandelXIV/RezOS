@@ -47,3 +47,9 @@ pub mod cpu {
         x86::rdpid()
     }
 }
+
+pub mod interrupt {
+    pub unsafe fn irq_disable() {
+        x86::irq::disable()
+    }
+}
