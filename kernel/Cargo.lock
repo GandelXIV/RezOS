@@ -69,6 +69,7 @@ name = "kernel"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
+ "limine",
  "rlibc",
  "spin 0.9.3",
  "tinybmp",
@@ -84,6 +85,12 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 dependencies = [
  "spin 0.5.2",
 ]
+
+[[package]]
+name = "limine"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eac64618e505bab2387986e5b1014f5d344130d609685bbd8b71a10af3ee599d"
 
 [[package]]
 name = "lock_api"
