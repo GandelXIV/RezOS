@@ -30,7 +30,7 @@ build/RezOS.bin: scripts/mk/mkiso.sh $(ISODEPS)
 	$< $@
 
 isodeps: $(ISODEPS)
-	echo "Build all required dependencies!
+	echo "Build all required dependencies!"
 
 isoroot/kernel.bin: build/kernel.bin
 	ln -f $< $@
