@@ -3,5 +3,5 @@
 /plexusFS/fs.bin
 /build
 /lab
-/initrd/*
+/isoroot/*
 /log/
