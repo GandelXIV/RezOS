@@ -23,27 +23,32 @@ endif
 
 ############ RECIEPE
 
+ISODEPS = isoroot/kernel.bin isoroot/limine-cd.bin isoroot/limine-cd-efi.bin isoroot/limine.sys isoroot/limine.cfg build/limine-deploy  
+
 # main
-build/RezOS.bin: isoroot/kernel.bin isoroot/limine-cd.bin isoroot/limine-cd-efi.bin isoroot/limine.sys isoroot/limine.cfg build/limine-deploy scripts/mk/mkiso.sh
-	scripts/mk/mkiso.sh $@
+build/RezOS.bin: scripts/mk/mkiso.sh $(ISODEPS)
+	$< $@
+
+isodeps: $(ISODEPS)
+	echo "Build all required dependencies!
 
 isoroot/kernel.bin: build/kernel.bin
-	ln $< $@
+	ln -f $< $@
 
 isoroot/limine-cd.bin: $(LIMINE_BIN)/limine-cd.bin
-	ln $< $@
+	ln -f $< $@
 
 isoroot/limine-cd-efi.bin: $(LIMINE_BIN)/limine-cd-efi.bin 
-	ln $< $@
+	ln -f $< $@
 
 isoroot/limine.sys: $(LIMINE_BIN)/limine.sys 
-	ln $< $@
+	ln -f $< $@
 
 isoroot/limine.cfg: kernel/limine.cfg 
-	ln $< $@
+	ln -f $< $@
 
 build/limine-deploy: $(LIMINE_BIN)/limine-deploy 
-	ln $< $@
+	ln -f $< $@
 
 $(LIMINE_BIN)/limine-deploy $(LIMINE_BIN)/limine.sys $(LIMINE_BIN)/limine-cd-efi.bin $(LIMINE_BIN)/limine-cd.bin: $(call rwildcard limine/*)
 	cd limine && ./bootstrap
@@ -69,7 +74,7 @@ $(MAKEFILE2GRAPH):
 .PHONY: run clean deep-clean
 
 run: build/RezOS.bin
-	qemu-system-x86_64 -cdrom $^ $(QEMU_ARGS)
+	qemu-system-x86_64 -D log/qemu.log -cdrom $^ $(QEMU_ARGS)
 
 clean:
 	rm -f build/*
