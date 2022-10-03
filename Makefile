@@ -73,7 +73,7 @@ $(MAKEFILE2GRAPH):
 
 .PHONY: run clean deep-clean
 
-run: build/RezOS.bin
+run: build/RezOS.iso
 	qemu-system-x86_64 -D log/qemu.log -cdrom $^ $(QEMU_ARGS)
 
 clean:
