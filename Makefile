@@ -26,7 +26,7 @@ endif
 ISODEPS = isoroot/kernel.bin isoroot/limine-cd.bin isoroot/limine-cd-efi.bin isoroot/limine.sys isoroot/limine.cfg build/limine-deploy  
 
 # main
-build/RezOS.bin: scripts/mk/mkiso.sh $(ISODEPS)
+build/RezOS.iso: scripts/mk/mkiso.sh $(ISODEPS)
 	$< $@
 
 isodeps: $(ISODEPS)
