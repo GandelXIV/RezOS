@@ -1,14 +1,14 @@
-use core::str;
 use core::ptr::NonNull;
+use core::str;
 
 const MAGIC_COMMON: (u64, u64) = (0xc7b1dd30df4c8b88, 0x0a82e883a194f07b);
 type Ptr<T> = *const T;
 type MutPtr<T> = *mut T;
 
 pub fn init() {
-    let term_resp = unsafe{ &*(LIMINE_REQUEST_TERMINAL.response) };
-    if term_resp.terminal_count > 0 { 
-        let address = unsafe{ ((*((**(term_resp.terminals)).framebuffer)).address) };
+    let term_resp = unsafe { &*(LIMINE_REQUEST_TERMINAL.response) };
+    if term_resp.terminal_count > 0 {
+        let address = unsafe { ((*((**(term_resp.terminals)).framebuffer)).address) };
     }
 }
 
@@ -18,7 +18,7 @@ extern "C" {
     static LIMINE_REQUEST_TERMINAL: RequestTerminal;
 }
 
-// Boot Info feature 
+// Boot Info feature
 
 #[repr(C)]
 struct RequestBootInfo {
@@ -41,7 +41,7 @@ struct RequestTerminal {
     id: [u64; 4],
     revision: u64,
     response: Ptr<ResponseTerminal>,
-    callback: &'static fn (Ptr<Terminal>, u64, u64, u64, u64),
+    callback: &'static fn(Ptr<Terminal>, u64, u64, u64, u64),
 }
 
 #[repr(C)]
@@ -49,7 +49,7 @@ struct ResponseTerminal {
     revision: u64,
     terminal_count: u64,
     terminals: Ptr<Ptr<Terminal>>,
-    write: &'static fn (Ptr<Terminal>, &[u8], usize),
+    write: &'static fn(Ptr<Terminal>, &[u8], usize),
 }
 
 #[repr(C)]
@@ -77,4 +77,3 @@ pub struct Framebuffer {
     pub edid_size: u64,
     pub edid: Ptr<u8>,
 }
-

@@ -12,8 +12,8 @@ fn kpanic(_pi: &core::panic::PanicInfo<'_>) -> ! {
     loop {}
 }
 
-mod limine;
 mod arch;
+mod limine;
 
 #[no_mangle]
 pub extern "C" fn kmain() {
