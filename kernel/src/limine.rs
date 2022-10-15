@@ -4,12 +4,18 @@ use core::ptr::NonNull;
 const MAGIC_COMMON: (u64, u64) = (0xc7b1dd30df4c8b88, 0x0a82e883a194f07b);
 type Ptr<T> = *const T;
 type MutPtr<T> = *mut T;
+type TerminalCallback = extern "C" fn (Ptr<Terminal>, u64, u64, u64, u64);
+
+pub fn term_write(txt: &str) {
+    let term_resp = unsafe{ &*(LIMINE_REQUEST_TERMINAL.response) };
+    if term_resp.terminal_count > 0 {
+        let term = unsafe{ &**(term_resp.terminals) };
+        unsafe { (term_resp.write)(term, txt, txt.len()); }
+    }
+}
 
 pub fn init() {
-    let term_resp = unsafe{ &*(LIMINE_REQUEST_TERMINAL.response) };
-    if term_resp.terminal_count > 0 { 
-        let address = unsafe{ ((*((**(term_resp.terminals)).framebuffer)).address) };
-    }
+    term_write("Hello from limine terminal!\n");
 }
 
 // TODO: process these requests
@@ -41,7 +47,7 @@ struct RequestTerminal {
     id: [u64; 4],
     revision: u64,
     response: Ptr<ResponseTerminal>,
-    callback: &'static fn (Ptr<Terminal>, u64, u64, u64, u64),
+    callback: TerminalCallback,
 }
 
 #[repr(C)]
@@ -49,7 +55,7 @@ struct ResponseTerminal {
     revision: u64,
     terminal_count: u64,
     terminals: Ptr<Ptr<Terminal>>,
-    write: &'static fn (Ptr<Terminal>, &[u8], usize),
+    write: unsafe extern "C" fn (Ptr<Terminal>, &str, usize),
 }
 
 #[repr(C)]
@@ -60,7 +66,7 @@ struct Terminal {
 }
 
 #[repr(C)]
-pub struct Framebuffer {
+struct Framebuffer {
     pub address: MutPtr<u8>,
     pub width: u64,
     pub height: u64,
