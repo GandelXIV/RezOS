@@ -4,13 +4,15 @@ use core::str;
 const MAGIC_COMMON: (u64, u64) = (0xc7b1dd30df4c8b88, 0x0a82e883a194f07b);
 type Ptr<T> = *const T;
 type MutPtr<T> = *mut T;
-type TerminalCallback = extern "C" fn (Ptr<Terminal>, u64, u64, u64, u64);
+type TerminalCallback = extern "C" fn(Ptr<Terminal>, u64, u64, u64, u64);
 
 pub fn term_write(txt: &str) {
-    let term_resp = unsafe{ &*(LIMINE_REQUEST_TERMINAL.response) };
+    let term_resp = unsafe { &*(LIMINE_REQUEST_TERMINAL.response) };
     if term_resp.terminal_count > 0 {
-        let term = unsafe{ &**(term_resp.terminals) };
-        unsafe { (term_resp.write)(term, txt, txt.len()); }
+        let term = unsafe { &**(term_resp.terminals) };
+        unsafe {
+            (term_resp.write)(term, txt, txt.len());
+        }
     }
 }
 
@@ -55,7 +57,7 @@ struct ResponseTerminal {
     revision: u64,
     terminal_count: u64,
     terminals: Ptr<Ptr<Terminal>>,
-    write: unsafe extern "C" fn (Ptr<Terminal>, &str, usize),
+    write: unsafe extern "C" fn(Ptr<Terminal>, &str, usize),
 }
 
 #[repr(C)]
