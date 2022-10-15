@@ -21,5 +21,8 @@ LIMINE_REQUEST_TERMINAL:
 .info2    dq 0xa68d0c7265d38878
 .revision dq 0
 .response dq 0
-.callback dq 0
+.callback dq CALLBACK
+
+CALLBACK:
+ret
 
