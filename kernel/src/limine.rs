@@ -1,5 +1,5 @@
-use core::str;
 use core::ptr::NonNull;
+use core::str;
 
 const MAGIC_COMMON: (u64, u64) = (0xc7b1dd30df4c8b88, 0x0a82e883a194f07b);
 type Ptr<T> = *const T;
@@ -24,7 +24,7 @@ extern "C" {
     static LIMINE_REQUEST_TERMINAL: RequestTerminal;
 }
 
-// Boot Info feature 
+// Boot Info feature
 
 #[repr(C)]
 struct RequestBootInfo {
@@ -83,4 +83,3 @@ struct Framebuffer {
     pub edid_size: u64,
     pub edid: Ptr<u8>,
 }
-
