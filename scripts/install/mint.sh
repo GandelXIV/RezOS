@@ -10,7 +10,7 @@ set -x
 # graphviz - dot client, used to generate log/buildflow.png
 # rustup   - the recomended rust toolchain installer/manager
 
-apt install -y curl make nasm gcc aqemu graphviz
+apt install -y curl make nasm gcc aqemu graphviz mtools xorriso automake
 
 curl https://sh.rustup.rs -sSf | sh -s -- -y
 source "$HOME/.cargo/env/"

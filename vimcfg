@@ -1,0 +1,3 @@
+set guicursor=a:ver10,n:block
+set relativenumber
+
