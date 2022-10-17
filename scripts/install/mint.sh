@@ -13,4 +13,3 @@ set -x
 apt install -y curl make nasm gcc aqemu graphviz mtools xorriso automake
 
 curl https://sh.rustup.rs -sSf | sh -s -- -y
-source "$HOME/.cargo/env/"
