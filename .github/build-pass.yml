@@ -1,0 +1,26 @@
+name: Test if build passes
+run-name: Run by: ${{github.actor}}
+
+# We will trigger this only on the main branch for now to save CI time
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-pass-check:
+    runs-on: ubuntu-latest
+    steps:
+      - runs-on: ubuntu-22.04
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Sync submodules
+        run: git submodule update --init
+      - name: install dependencies
+        run: scripts/install/mint.sh
+      - name: configure
+        run: ./configure.sh 
+      - name: Build
+        run: make
+
