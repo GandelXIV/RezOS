@@ -10,14 +10,14 @@ LIMINE_BIN = limine/bin/
 
 ############ OPTIONS
 
-# either '' or '--release'
-KERNEL_BUILD_PROFILE ?= ''
+# either '--release' or left blank
+KERNEL_BUILD_RELEASE ?= 
 # only x86_64 for now
 KERNEL_TRIPLE 	     ?= x86_64
 
 ############ CONDITIONS
 
-ifeq ($(KERNEL_BUILD_PROFILE), '--release')
+ifeq ($(KERNEL_BUILD_RELEASE), '--release')
 	RKERNEL_PATH = kernel/target/$(KERNEL_TRIPLE)/release/libkernel.a 
 else
 	RKERNEL_PATH = kernel/target/$(KERNEL_TRIPLE)/debug/libkernel.a
@@ -61,7 +61,7 @@ $(LIMINE_BIN)/limine-deploy $(LIMINE_BIN)/limine.sys $(LIMINE_BIN)/limine-cd-efi
 
 # the kernel itself compiles to a static library that gets linked to kentry.asm which holds the entry point and some additional structures and functions (such as limine requests)
 build/kernel.bin: build/kentry.o $(wildcard kernel/* kernel/src/* kernel/src/io/* kernel/src/arch/* kernel/.cargo/* kernel/triple/*)
-	cd kernel/ && cargo build --target triple/$(KERNEL_TRIPLE).json --lib $(KERNEL_BUILD_PROFILE)
+	cd kernel/ && cargo build --target triple/$(KERNEL_TRIPLE).json --lib $(KERNEL_BUILD_RELEASE)
 	ld -T kernel/kernel.ld $< $(RKERNEL_PATH) -o $@
 	
 build/kentry.o: kernel/kentry/kentry.asm
