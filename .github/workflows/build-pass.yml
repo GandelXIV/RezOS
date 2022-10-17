@@ -1,5 +1,4 @@
 name: Test if build passes
-run-name: Run by: ${{github.actor}}
 
 # We will trigger this only on the main branch for now to save CI time
 on:
