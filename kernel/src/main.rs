@@ -17,6 +17,7 @@ mod limine;
 
 #[no_mangle]
 pub extern "C" fn kmain() {
+    arch::init();
     limine::init();
     loop {}
 }

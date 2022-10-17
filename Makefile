@@ -8,12 +8,14 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 MAKEFILE2GRAPH = makefile2graph/make2graph
 LIMINE_BIN = limine/bin/
 
-############ CONFIG
+############ OPTIONS
 
-KERNEL_BUILD_PROFILE ?= '--release'
+# either '' or '--release'
+KERNEL_BUILD_PROFILE ?= ''
+# only x86_64 for now
 KERNEL_TRIPLE 	     ?= x86_64
 
-############ CONDITIONAL
+############ CONDITIONS
 
 ifeq ($(KERNEL_BUILD_PROFILE), '--release')
 	RKERNEL_PATH = kernel/target/$(KERNEL_TRIPLE)/release/libkernel.a 
@@ -23,10 +25,11 @@ endif
 
 ############ RECIEPE
 
+# these dependencies get copied on the boot partition
 ISODEPS = isoroot/kernel.bin isoroot/limine-cd.bin isoroot/limine-cd-efi.bin isoroot/limine.sys isoroot/limine.cfg build/limine-deploy  
 
 # main
-build/RezOS.iso: scripts/mk/mkiso.sh $(ISODEPS)
+build/RezOS.iso: scripts/mk/mkiso.sh $(ISODEPS) Makefile
 	$< $@
 
 isodeps: $(ISODEPS)
@@ -56,6 +59,7 @@ $(LIMINE_BIN)/limine-deploy $(LIMINE_BIN)/limine.sys $(LIMINE_BIN)/limine-cd-efi
 	make -C limine
 	make -C limine limine-deploy
 
+# the kernel itself compiles to a static library that gets linked to kentry.asm which holds the entry point and some additional structures and functions (such as limine requests)
 build/kernel.bin: build/kentry.o $(wildcard kernel/* kernel/src/* kernel/src/io/* kernel/src/arch/* kernel/.cargo/* kernel/triple/*)
 	cd kernel/ && cargo build --target triple/$(KERNEL_TRIPLE).json --lib $(KERNEL_BUILD_PROFILE)
 	ld -T kernel/kernel.ld $< $(RKERNEL_PATH) -o $@
@@ -63,13 +67,14 @@ build/kernel.bin: build/kentry.o $(wildcard kernel/* kernel/src/* kernel/src/io/
 build/kentry.o: kernel/kentry/kentry.asm
 	nasm -f elf64 $^ -o $@
 
+# visual representation of the build process
 log/buildflow.png: $(MAKEFILE2GRAPH) Makefile
 	make -Bnd | $(MAKEFILE2GRAPH) -r | dot -Tpng -o $@
 
 $(MAKEFILE2GRAPH):
 	cd makefile2graph && make
 
-############ PHONY
+############ PHONY (commands, non file targets)
 
 .PHONY: run clean deep-clean
 
