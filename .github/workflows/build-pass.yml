@@ -1,11 +1,11 @@
 name: Test if build passes
 
-# We will trigger this only on the main branch for now to save CI time
+# We will trigger this only on the master branch for now to save CI time
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   build-pass-check:
