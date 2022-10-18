@@ -15,8 +15,10 @@ jobs:
         uses: actions/checkout@v3
       - name: Sync submodules
         run: git submodule update --init
-      - name: install dependencies
-        run: sudo scripts/install/all/mint.sh
+      - name: install package dependencies
+        run: sudo scripts/install/packages/mint.sh
+      - name: install rust
+        run: scripts/install/rust-linux.sh
       - name: configure
         run: ./configure.sh 
       - name: Build
