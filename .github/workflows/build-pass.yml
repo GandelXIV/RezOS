@@ -16,7 +16,7 @@ jobs:
       - name: Sync submodules
         run: git submodule update --init
       - name: install dependencies
-        run: sudo scripts/install/mint.sh
+        run: sudo scripts/install/all/mint.sh
       - name: configure
         run: ./configure.sh 
       - name: Build

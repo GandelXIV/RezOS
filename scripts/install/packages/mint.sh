@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set -xe
 
 # DEPENDENCIES:
 # curl     - used to install rust
@@ -9,7 +9,7 @@ set -x
 # aqemu    - QEMU emulator, required for debug/run
 # graphviz - dot client, used to generate log/buildflow.png
 # rustup   - the recomended rust toolchain installer/manager
+# xorriso  - iso image maker 
 
 apt install -y curl make nasm gcc aqemu graphviz mtools xorriso automake
 
-curl https://sh.rustup.rs -sSf | sh -s -- -y
