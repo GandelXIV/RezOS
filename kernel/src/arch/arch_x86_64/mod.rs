@@ -52,3 +52,4 @@ pub mod interrupt {
         x86::irq::disable()
     }
 }
+

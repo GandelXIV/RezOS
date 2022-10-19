@@ -1,4 +1,4 @@
-mod arch_x86;
+mod arch_x86_64;
 
 pub enum ArchType {
     X86_64,
@@ -6,4 +6,4 @@ pub enum ArchType {
 }
 
 #[cfg(target_arch = "x86_64")]
-pub use arch_x86::*;
+pub use arch_x86_64::*;
