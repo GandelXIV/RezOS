@@ -3,7 +3,7 @@ A modern operating system written in the rust programming language.
 ### premise:
 - Rust as a primary language for safety, speed and security
 - Modern bootloader support with the limine protocol
-- Architectural compatibility for x86_64 and AARCH64
+- Architectural compatibility for x86_64 and AARCH64/ARM64
 - Innovative approach to Micro/Monolithic kernel design
 - Graph VFS
 - Capability based permissions

@@ -1,11 +1,18 @@
+// This module handles all things limine 
+// See more about the protocol: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md 
+
 use core::ptr::NonNull;
 use core::str;
 
+// first two items in .id of all requests must be equal to the following magic
+// TODO: check this in init() for all requests
 const MAGIC_COMMON: (u64, u64) = (0xc7b1dd30df4c8b88, 0x0a82e883a194f07b);
 type Ptr<T> = *const T;
 type MutPtr<T> = *mut T;
+// See more: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-callback
 type TerminalCallback = extern "C" fn(Ptr<Terminal>, u64, u64, u64, u64);
 
+// higher level terminal write function, external
 pub fn term_write(txt: &str) {
     let term_resp = unsafe { &*(LIMINE_REQUEST_TERMINAL.response) };
     if term_resp.terminal_count > 0 {
@@ -16,17 +23,19 @@ pub fn term_write(txt: &str) {
     }
 }
 
+// Needs to get called before any of the module features are used
 pub fn init() {
     term_write("Hello from limine terminal!\n");
 }
 
-// TODO: process these requests
+// Linked from kentry/limine.asm
 extern "C" {
     static LIMINE_REQUEST_BOOT_INFO: RequestBootInfo;
     static LIMINE_REQUEST_TERMINAL: RequestTerminal;
 }
 
-// Boot Info feature
+// ======= Boot Info feature
+// See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-feature
 
 #[repr(C)]
 struct RequestBootInfo {
@@ -42,7 +51,8 @@ struct ResponseBootInfo {
     versionptr: Ptr<[u8]>,
 }
 
-// Terminal feature
+// ======= Terminal feature
+// See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#bootloader-info-feature
 
 #[repr(C)]
 struct RequestTerminal {

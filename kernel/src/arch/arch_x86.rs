@@ -1,5 +1,6 @@
 use super::ArchType;
 use x86;
+use x86_64;
 
 #[inline]
 pub const fn get_arch() -> ArchType {
@@ -35,12 +36,12 @@ pub mod portio {
 }
 
 pub mod cpu {
-    // Will cause a general protection fault if used outside of ring 0.
+    // WARNING: Will cause a general protection fault if used outside of ring 0.
     pub unsafe fn halt() {
         x86::halt();
     }
 
-    // May fail with #UD if rdpid is not supported (check CPUID).
+    // WARNING: May fail with #UD if rdpid is not supported (check CPUID).
     pub unsafe fn read_id() -> u64 {
         x86::rdpid()
     }
