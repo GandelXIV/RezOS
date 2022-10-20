@@ -3,6 +3,9 @@
 
 use core::ptr::NonNull;
 use core::str;
+use core::fmt::Write;
+use lazy_static::lazy_static;
+use spin::Mutex;
 
 // first two items in .id of all requests must be equal to the following magic
 // TODO: check this in init() for all requests
@@ -12,26 +15,19 @@ type MutPtr<T> = *mut T;
 // See more: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-callback
 type TerminalCallback = extern "C" fn(Ptr<Terminal>, u64, u64, u64, u64);
 
-// higher level terminal write function, external
-pub fn term_write(txt: &str) {
-    let term_resp = unsafe { &*(LIMINE_REQUEST_TERMINAL.response) };
-    if term_resp.terminal_count > 0 {
-        let term = unsafe { &**(term_resp.terminals) };
-        unsafe {
-            (term_resp.write)(term, txt, txt.len());
-        }
-    }
-}
-
-// Needs to get called before any of the module features are used
-pub fn init() {
-    term_write("Hello from limine terminal!\n");
-}
-
 // Linked from kentry/limine.asm
 extern "C" {
     static LIMINE_REQUEST_BOOT_INFO: RequestBootInfo;
     static LIMINE_REQUEST_TERMINAL: RequestTerminal;
+}
+
+lazy_static! {
+    static ref TERM0: Mutex<TerminalWriter> = Mutex::new(TerminalWriter::new(0).expect("Could not open limine terminal"));
+}
+
+// public interface to print to TERM0
+pub fn print0(s: &str) {
+    TERM0.lock().write_str(s);
 }
 
 // ======= Boot Info feature
@@ -53,6 +49,31 @@ struct ResponseBootInfo {
 
 // ======= Terminal feature
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#bootloader-info-feature
+
+struct TerminalWriter {
+    term: isize,
+    write: unsafe extern "C" fn(Ptr<Terminal>, &str, usize),
+}
+
+impl TerminalWriter {
+    fn new(terminal_number: u64) -> Option<Self> {
+        let term_resp = unsafe { &*(LIMINE_REQUEST_TERMINAL.response) };
+        if term_resp.terminal_count > terminal_number {
+            return Some(Self {
+                term: unsafe { (*term_resp.terminals).offset(terminal_number as isize) as isize},
+                write: term_resp.write,
+            })
+        }
+        None
+    }
+}
+
+impl Write for TerminalWriter {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        unsafe { (self.write)(self.term as *const Terminal, s, s.len()) }
+        Ok(())
+    } 
+}
 
 #[repr(C)]
 struct RequestTerminal {

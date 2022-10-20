@@ -70,6 +70,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "rlibc",
+ "rlibcex",
  "spin 0.9.3",
  "tinybmp",
  "volatile",
@@ -141,6 +142,12 @@ name = "rlibc"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc874b127765f014d792f16763a81245ab80500e2ad921ed4ee9e82481ee08fe"
+
+[[package]]
+name = "rlibcex"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47432d025415600760124e962a0bb2f40a71720fedaa6343d9128b75e7ff4ace"
 
 [[package]]
 name = "rustversion"
