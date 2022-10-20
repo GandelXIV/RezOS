@@ -10,17 +10,19 @@ LIMINE_BIN = limine/bin/
 
 ############ OPTIONS
 
-# either '--release' or left blank
-KERNEL_BUILD_RELEASE ?= 
+# either on/off
+KERNEL_BUILD_WITH_RELEASE ?= off 
 # only x86_64 for now
 KERNEL_TRIPLE 	     ?= x86_64
 
 ############ CONDITIONS
 
-ifeq ($(KERNEL_BUILD_RELEASE), '--release')
+ifeq ($(KERNEL_BUILD_WITH_RELEASE), on) 
 	RKERNEL_PATH = kernel/target/$(KERNEL_TRIPLE)/release/libkernel.a 
+	KERNEL_BUILD_RELEASE = '--release'
 else
 	RKERNEL_PATH = kernel/target/$(KERNEL_TRIPLE)/debug/libkernel.a
+	KERNEL_BUILD_RELEASE =
 endif
 
 ############ RECIEPE
