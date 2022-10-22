@@ -17,7 +17,7 @@ Follow these steps: <br>
 1. Clone the source repository <br>
 `git clone https://www.github.com/GandelXIV/RezOS.git`
 2. Update git submodules <br>
-`git submodule update --init`
+`git submodule update --init --progress`
 3. Install build dependencies <br>
   There are two ways to do this:
   - Using an install script located in `scripts/install/all/{your-distro}.sh`. <br> Note that currently only Arch and Mint(Ubuntu) are supported. <br>

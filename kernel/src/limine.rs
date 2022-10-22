@@ -1,11 +1,11 @@
-// This module handles all things limine 
-// See more about the protocol: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md 
+// This module handles all things limine
+// See more about the protocol: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md
+use core::ffi::CStr;
+use core::fmt::Write;
 use core::ptr::NonNull;
 use core::str;
-use core::fmt::Write;
 use lazy_static::lazy_static;
 use spin::Mutex;
-use core::ffi::{CStr};
 
 // first two items in .id of all requests must be equal to the following magic
 // TODO: check this in init() for all requests
@@ -24,7 +24,8 @@ extern "C" {
 }
 
 lazy_static! {
-    static ref TERM0: Mutex<TerminalWriter> = Mutex::new(TerminalWriter::new(0).expect("Could not open limine terminal"));
+    static ref TERM0: Mutex<TerminalWriter> =
+        Mutex::new(TerminalWriter::new(0).expect("Could not open limine terminal"));
 }
 
 // public interface to print to TERM0
@@ -38,11 +39,12 @@ pub fn print0(s: &[u8]) {
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-feature
 
 // returns the bootloaders (name, version)
+// assumes the response has static lifetime
 pub fn bootloader_info() -> (&'static [u8], &'static [u8]) {
     let response = unsafe { &*(LIMINE_REQUEST_BOOT_INFO.response) };
     (
         unsafe { CStr::from_ptr(response.name as *const i8).to_bytes() },
-        unsafe { CStr::from_ptr(response.version as *const i8).to_bytes() }
+        unsafe { CStr::from_ptr(response.version as *const i8).to_bytes() },
     )
 }
 
@@ -75,7 +77,7 @@ impl TerminalWriter {
             return Some(Self {
                 term: term_resp.terminals as usize + terminal_number as usize,
                 write: term_resp.write,
-            })
+            });
         }
         None
     }
