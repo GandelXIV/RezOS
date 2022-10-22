@@ -5,10 +5,12 @@ use core::str;
 use core::fmt::Write;
 use lazy_static::lazy_static;
 use spin::Mutex;
+use core::ffi::{CStr};
 
 // first two items in .id of all requests must be equal to the following magic
 // TODO: check this in init() for all requests
 const MAGIC_COMMON: (u64, u64) = (0xc7b1dd30df4c8b88, 0x0a82e883a194f07b);
+
 type Ptr<T> = *const T;
 type MutPtr<T> = *mut T;
 // See more: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-callback
@@ -35,6 +37,15 @@ pub fn print0(s: &[u8]) {
 // ======= Boot Info feature
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-feature
 
+// returns the bootloaders (name, version)
+pub fn bootloader_info() -> (&'static [u8], &'static [u8]) {
+    let response = unsafe { &*(LIMINE_REQUEST_BOOT_INFO.response) };
+    (
+        unsafe { CStr::from_ptr(response.name as *const i8).to_bytes() },
+        unsafe { CStr::from_ptr(response.version as *const i8).to_bytes() }
+    )
+}
+
 #[repr(C)]
 struct RequestBootInfo {
     id: [u64; 4],
@@ -43,10 +54,10 @@ struct RequestBootInfo {
 }
 
 #[repr(C)]
-struct ResponseBootInfo {
+pub struct ResponseBootInfo {
     revision: u64,
-    nameptr: Ptr<[u8]>,
-    versionptr: Ptr<[u8]>,
+    pub name: *const u8,
+    pub version: *const u8,
 }
 
 // ======= Terminal feature
