@@ -1,6 +1,5 @@
 // This module handles all things limine 
 // See more about the protocol: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md 
-
 use core::ptr::NonNull;
 use core::str;
 use core::fmt::Write;
@@ -13,7 +12,8 @@ const MAGIC_COMMON: (u64, u64) = (0xc7b1dd30df4c8b88, 0x0a82e883a194f07b);
 type Ptr<T> = *const T;
 type MutPtr<T> = *mut T;
 // See more: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-callback
-type TerminalCallback = extern "C" fn(Ptr<Terminal>, u64, u64, u64, u64);
+type TerminalCallbackFunction = extern "C" fn(Ptr<Terminal>, u64, u64, u64, u64);
+type TerminalWriteFunction = extern "C" fn(Ptr<Terminal>, *const [u8], usize);
 
 // Linked from kentry/limine.asm
 extern "C" {
@@ -26,8 +26,10 @@ lazy_static! {
 }
 
 // public interface to print to TERM0
-pub fn print0(s: &str) {
-    TERM0.lock().write_str(s);
+// accepts non ASCII (non utf8 strings) -> b"Hello"
+pub fn print0(s: &[u8]) {
+    let access = TERM0.lock();
+    ((access).write)(access.term as *const Terminal, s, s.len());
 }
 
 // ======= Boot Info feature
@@ -51,8 +53,8 @@ struct ResponseBootInfo {
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#bootloader-info-feature
 
 struct TerminalWriter {
-    term: isize,
-    write: unsafe extern "C" fn(Ptr<Terminal>, &str, usize),
+    term: usize, // pointer to terminal
+    write: TerminalWriteFunction,
 }
 
 impl TerminalWriter {
@@ -60,7 +62,7 @@ impl TerminalWriter {
         let term_resp = unsafe { &*(LIMINE_REQUEST_TERMINAL.response) };
         if term_resp.terminal_count > terminal_number {
             return Some(Self {
-                term: unsafe { (*term_resp.terminals).offset(terminal_number as isize) as isize},
+                term: term_resp.terminals as usize + terminal_number as usize,
                 write: term_resp.write,
             })
         }
@@ -68,19 +70,12 @@ impl TerminalWriter {
     }
 }
 
-impl Write for TerminalWriter {
-    fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        unsafe { (self.write)(self.term as *const Terminal, s, s.len()) }
-        Ok(())
-    } 
-}
-
 #[repr(C)]
 struct RequestTerminal {
     id: [u64; 4],
     revision: u64,
     response: Ptr<ResponseTerminal>,
-    callback: TerminalCallback,
+    callback: TerminalCallbackFunction,
 }
 
 #[repr(C)]
@@ -88,7 +83,7 @@ struct ResponseTerminal {
     revision: u64,
     terminal_count: u64,
     terminals: Ptr<Ptr<Terminal>>,
-    write: unsafe extern "C" fn(Ptr<Terminal>, &str, usize),
+    write: TerminalWriteFunction,
 }
 
 #[repr(C)]

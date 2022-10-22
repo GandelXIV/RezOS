@@ -1,12 +1,11 @@
 #![no_std]
 #![no_main]
 #![crate_type = "staticlib"]
-#![feature(core_ffi_c)]
 
 use core::panic::{self, PanicInfo};
 use core::fmt::write;
-#[allow(unused_imports)]
 // Do not remove these imports, they prevent link errors
+#[allow(unused_imports)]
 pub use rlibc;
 pub use rlibcex;
 
@@ -20,6 +19,6 @@ mod limine;
 
 #[no_mangle]
 pub extern "C" fn kmain() {
-    limine::print0("Hello Kernel World!\n");
+    limine::print0(b"Hello Kernel World!\n");
     loop {}
 }
