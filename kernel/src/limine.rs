@@ -13,10 +13,16 @@ use spin::Mutex;
 // TODO: check this in init() for all requests
 const MAGIC_COMMON: (u64, u64) = (0xc7b1dd30df4c8b88, 0x0a82e883a194f07b);
 
+// simple pointer wrappers that can be replaced in the future for something like NonNull<T>
 type Ptr<T> = *const T;
 type MutPtr<T> = *mut T;
+
 // See more: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-callback
 type TerminalCallbackFunction = extern "C" fn(Ptr<Terminal>, u64, u64, u64, u64);
+
+// function provided by limine to simplify display access
+// WARNING: The function is NOT thread-safe, NOT reentrant, per-terminal.
+// we access it from a Mutex<TerminalWriter> e.g. TERM0
 type TerminalWriteFunction = extern "C" fn(Ptr<Terminal>, *const [u8], usize);
 
 // Linked from kentry/limine.asm
@@ -27,6 +33,7 @@ extern "C" {
 }
 
 lazy_static! {
+    // handles concurrent terminal.write() calls
     static ref TERM0: Mutex<TerminalWriter> =
         Mutex::new(TerminalWriter::new(0).expect("Could not open limine terminal"));
 }
@@ -35,17 +42,18 @@ lazy_static! {
 // accepts non ASCII (non utf8 strings) -> b"Hello"
 pub fn print0(s: &[u8]) {
     let access = TERM0.lock();
-    ((access).write)(access.term as *const Terminal, s, s.len());
+    ((access).write)(access.get_terminal(), s, s.len());
 }
 
 // ======= Boot Info feature
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-feature
 
-// returns the bootloaders (name, version)
-// assumes the response has static lifetime
+// returns the bootloaders -> (name, version)
+// WARNING: assumes the response has static lifetime
 pub fn bootloader_info() -> (&'static [u8], &'static [u8]) {
     let response = unsafe { &*(LIMINE_REQUEST_BOOT_INFO.response) };
     (
+        // SAFETY: ptr must not be null and must hold null terminated string
         unsafe { CStr::from_ptr(response.name as *const i8).to_bytes() },
         unsafe { CStr::from_ptr(response.version as *const i8).to_bytes() },
     )
@@ -180,6 +188,7 @@ struct TerminalWriter {
     write: TerminalWriteFunction,
 }
 
+// handles
 impl TerminalWriter {
     fn new(terminal_number: u64) -> Option<Self> {
         let term_resp = unsafe { &*(LIMINE_REQUEST_TERMINAL.response) };
@@ -190,6 +199,16 @@ impl TerminalWriter {
             });
         }
         None
+    }
+
+    fn get_terminal(&self) -> *const Terminal {
+        self.term as *const Terminal
+    }
+
+    // exposes the (width, height) of term 
+    fn dimensions(&self) -> (u64, u64) {
+        let t = unsafe { &* self.get_terminal() };
+        (t.columns, t.rows)
     }
 }
 
@@ -216,6 +235,7 @@ struct Terminal {
     framebuffer: Ptr<Framebuffer>,
 }
 
+// use by the Terminal feature and the Framebuffer feature
 #[repr(C)]
 struct Framebuffer {
     pub address: MutPtr<u8>,
