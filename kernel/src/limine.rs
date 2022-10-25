@@ -4,6 +4,8 @@ use core::ffi::CStr;
 use core::fmt::Write;
 use core::ptr::NonNull;
 use core::str;
+use core::convert::TryFrom;
+use core::iter::Iterator;
 use lazy_static::lazy_static;
 use spin::Mutex;
 
@@ -21,6 +23,7 @@ type TerminalWriteFunction = extern "C" fn(Ptr<Terminal>, *const [u8], usize);
 extern "C" {
     static LIMINE_REQUEST_BOOT_INFO: RequestBootInfo;
     static LIMINE_REQUEST_TERMINAL: RequestTerminal;
+    static LIMINE_REQUEST_MEMORY_MAP: RequestMemoryMap;
 }
 
 lazy_static! {
@@ -60,6 +63,113 @@ pub struct ResponseBootInfo {
     revision: u64,
     pub name: *const u8,
     pub version: *const u8,
+}
+
+// ======= Memory Map feature
+// See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#memory-map-feature
+
+// private
+
+#[repr(C)]
+struct RequestMemoryMap {
+    id: [u64; 4],
+    revision: u64,
+    response: Ptr<ResponseMemoryMap>,
+}
+
+#[repr(C)]
+struct ResponseMemoryMap {
+    revision: u64,
+    entry_count: u64,
+    // has length of entry_count
+    entries: Ptr<Ptr<MemoryMapEntry>>,
+}
+
+#[repr(C)]
+struct MemoryMapEntry {
+    base: u64,
+    length: u64,
+    typ: u64, // cast to MemmapEntryType 
+}
+
+// public 
+
+pub enum MemmapEntryType {
+    Usable,
+    Reserved,
+    AcpiReclaimable,
+    AcpiNvs,
+    BadMemory,
+    BootloaderReclaimable,
+    KernelAndModules,
+    MemmapFramebuffer,
+}
+
+impl TryFrom<u64> for MemmapEntryType {
+    type Error=();
+    
+    fn try_from(value: u64) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Usable),
+            1 => Ok(Self::Reserved),
+            2 => Ok(Self::AcpiReclaimable),
+            3 => Ok(Self::AcpiNvs),
+            4 => Ok(Self::BadMemory),
+            5 => Ok(Self::BootloaderReclaimable),
+            6 => Ok(Self::KernelAndModules),
+            7 => Ok(Self::MemmapFramebuffer),
+            _ => Err(()),
+        }
+    }
+}
+
+// THIS FUNCTION CAUSES A TRIPLE FAULT AND I DONT KNOW WHYYYYY
+// THE POINTER DEREF IS NOT THE PROBLEM BUT SOMETHING WITH MemmapList::new, BUT THE ONLY THING IT
+// DOES IS COPY DATA??? MY BEST GUESS FOR NOW IS SOME KIND OF MEMORY PROTECTION ERROR 'TIL I MAKE A
+// WORKING EXCEPTION HANDLER!!!!!!!!!!!!!!
+pub fn memory_map() -> MemmapList {
+    MemmapList::new(unsafe { &*(LIMINE_REQUEST_MEMORY_MAP.response) })
+}
+
+// rust-friendly version of ResponseMemoryMap
+pub struct MemmapList {
+    icount: isize,
+    entry_count: isize,
+    entries: Ptr<Ptr<MemoryMapEntry>>,
+}
+
+impl MemmapList {
+    fn new(base: &ResponseMemoryMap) -> Self {
+        Self {
+            icount: 0,
+            entry_count: base.entry_count as isize,
+            entries: base.entries,
+        }
+    }
+}
+
+impl Iterator for MemmapList {
+    type Item = MemmapItem;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.icount >= self.entry_count {
+            return None;
+        } 
+        
+        let e = unsafe { &*((*(self.entries)).offset(self.icount)) };
+        
+        self.icount += 1;
+        Some(Self::Item {
+            range: (e.base as usize, (e.length + e.base) as usize),
+            typ: MemmapEntryType::try_from(e.typ).unwrap(),
+        })
+    }
+}
+
+// rust-friendly version of MemoryMapEntry
+pub struct MemmapItem {
+    pub range: (usize, usize),
+    pub typ: MemmapEntryType,
 }
 
 // ======= Terminal feature

@@ -66,8 +66,8 @@ build/kernel.bin: build/kentry.o $(wildcard kernel/* kernel/src/* kernel/src/io/
 	cd kernel/ && cargo build --target triple/$(KERNEL_TRIPLE).json --lib $(KERNEL_BUILD_RELEASE)
 	ld -T kernel/kernel.ld $< $(RKERNEL_PATH) -o $@
 	
-build/kentry.o: kernel/kentry/kentry.asm
-	nasm -f elf64 $^ -o $@
+build/kentry.o: kernel/kentry/kentry.asm kernel/kentry/limine.asm
+	nasm -f elf64 $< -o $@
 
 # visual representation of the build process
 log/buildflow.png: $(MAKEFILE2GRAPH) Makefile

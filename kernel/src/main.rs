@@ -11,6 +11,7 @@ pub use rlibcex;
 
 #[panic_handler]
 fn kpanic(_pi: &core::panic::PanicInfo<'_>) -> ! {
+    limine::print0(b"\nKERNEL PANIC!!!\n");
     loop {}
 }
 
@@ -20,11 +21,13 @@ mod limine;
 #[no_mangle]
 pub extern "C" fn kmain() {
     limine::print0(b"Hello World!\n");
+    // arch 
     limine::print0(b"CPU Architecture: ");
     match arch::get_arch() {
         arch::ArchType::X86_64 => limine::print0(b"x86_64"),
         arch::ArchType::Arm64 => limine::print0(b"Arm64/AArch64"),
     };
+    // boot loader
     let (blname, blversion) = limine::bootloader_info();
     limine::print0(b"\n[Bootloader info]\n");
     limine::print0(b"--> name: ");
@@ -32,5 +35,7 @@ pub extern "C" fn kmain() {
     limine::print0(b"\n--> version: ");
     limine::print0(blversion);
     limine::print0(b"\n");
+
+    limine::print0(b"Nothing to do!\n");
     loop {}
 }
