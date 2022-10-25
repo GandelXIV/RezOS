@@ -78,7 +78,7 @@ struct TerminalWriter {
     write: TerminalWriteFunction,
 }
 
-// handles 
+// handles
 impl TerminalWriter {
     fn new(terminal_number: u64) -> Option<Self> {
         let term_resp = unsafe { &*(LIMINE_REQUEST_TERMINAL.response) };
@@ -93,6 +93,12 @@ impl TerminalWriter {
 
     fn get_terminal(&self) -> *const Terminal {
         self.term as *const Terminal
+    }
+
+    // exposes the (width, height) of term 
+    fn dimensions(&self) -> (u64, u64) {
+        let t = unsafe { &* self.get_terminal() };
+        (t.columns, t.rows)
     }
 }
 
