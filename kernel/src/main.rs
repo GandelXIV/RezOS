@@ -35,7 +35,15 @@ pub extern "C" fn kmain() {
     limine::print0(b"\n--> version: ");
     limine::print0(blversion);
     limine::print0(b"\n");
-
+    // memory map
+    limine::print0(b"[Memory Map]\n");
+    let mm = limine::memory_map();
+    // TODO: print region area
+    for region in mm {
+        limine::print0(region.typ.into());
+        limine::print0(b" (X - X)\n");
+    }
+    
     limine::print0(b"Nothing to do!\n");
     loop {}
 }

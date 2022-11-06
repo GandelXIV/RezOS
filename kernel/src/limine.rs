@@ -85,6 +85,7 @@ struct RequestMemoryMap {
     response: Ptr<ResponseMemoryMap>,
 }
 
+#[derive(Clone)]
 #[repr(C)]
 struct ResponseMemoryMap {
     revision: u64,
@@ -131,40 +132,54 @@ impl TryFrom<u64> for MemmapEntryType {
     }
 }
 
-// THIS FUNCTION CAUSES A TRIPLE FAULT AND I DONT KNOW WHYYYYY
-// THE POINTER DEREF IS NOT THE PROBLEM BUT SOMETHING WITH MemmapList::new, BUT THE ONLY THING IT
-// DOES IS COPY DATA??? MY BEST GUESS FOR NOW IS SOME KIND OF MEMORY PROTECTION ERROR 'TIL I MAKE A
-// WORKING EXCEPTION HANDLER!!!!!!!!!!!!!!
-pub fn memory_map() -> MemmapList {
-    MemmapList::new(unsafe { &*(LIMINE_REQUEST_MEMORY_MAP.response) })
-}
-
-// rust-friendly version of ResponseMemoryMap
-pub struct MemmapList {
-    icount: isize,
-    entry_count: isize,
-    entries: Ptr<Ptr<MemoryMapEntry>>,
-}
-
-impl MemmapList {
-    fn new(base: &ResponseMemoryMap) -> Self {
-        Self {
-            icount: 0,
-            entry_count: base.entry_count as isize,
-            entries: base.entries,
+// TODO: rewrite this using a macro or a derive
+impl Into<&'static [u8]> for MemmapEntryType {
+    fn into(self) -> &'static [u8] {
+        match self {
+            MemmapEntryType::Usable => b"Usable",
+            MemmapEntryType::Reserved => b"Reserved",
+            MemmapEntryType::AcpiReclaimable => b"AcpiReclaimable",
+            MemmapEntryType::AcpiNvs => b"AcpiNvs",
+            MemmapEntryType::BadMemory => b"BadMemory",
+            MemmapEntryType::BootloaderReclaimable => b"BootloaderReclaimable",
+            MemmapEntryType::KernelAndModules => b"KernelAndModules",
+            MemmapEntryType::MemmapFramebuffer => b"MemmapFramebuffer",
         }
     }
 }
 
-impl Iterator for MemmapList {
+// THIS FUNCTION CAUSES A TRIPLE FAULT AND I DONT KNOW WHYYYYY
+// THE POINTER DEREF IS NOT THE PROBLEM BUT SOMETHING WITH MemmapList::new, BUT THE ONLY THING IT
+// DOES IS COPY DATA??? MY BEST GUESS FOR NOW IS SOME KIND OF MEMORY PROTECTION ERROR 'TIL I MAKE A
+// WORKING EXCEPTION HANDLER!!!!!!!!!!!!!!
+pub fn memory_map() -> MemoryMap {
+    MemoryMap::new(unsafe { &*(LIMINE_REQUEST_MEMORY_MAP.response) })
+}
+
+// rust-friendly version of ResponseMemoryMap
+pub struct MemoryMap {
+    icount: u64,
+    resp_copy: ResponseMemoryMap,
+}
+
+impl MemoryMap {
+    fn new(base: &ResponseMemoryMap) -> Self {
+        Self {
+            icount: 0,
+            resp_copy: base.clone(),
+        }
+    }
+}
+
+impl Iterator for MemoryMap {
     type Item = MemmapItem;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.icount >= self.entry_count {
+        if self.icount >= self.resp_copy.entry_count {
             return None;
-        } 
+        }
         
-        let e = unsafe { &*((*(self.entries)).offset(self.icount)) };
+        let e = unsafe { &*((*(self.resp_copy.entries)).offset(self.icount as isize)) };
         
         self.icount += 1;
         Some(Self::Item {

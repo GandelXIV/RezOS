@@ -37,9 +37,6 @@ LIMINE_REQUEST_TERMINAL:
 ; we provide a default implementation CALLBACK
 .callback dq CALLBACK
 
-CALLBACK:
-ret
-
 LIMINE_REQUEST_MEMORY_MAP:
 .common1  dq MAGIC_COMMON_A
 .common2  dq MAGIC_COMMON_B
@@ -48,4 +45,8 @@ LIMINE_REQUEST_MEMORY_MAP:
 .revision dq 0
 ; pointer to the response
 .response dq 0
+
+; keep this on the bottom
+CALLBACK:
+ret
 

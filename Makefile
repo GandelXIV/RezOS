@@ -83,6 +83,9 @@ $(MAKEFILE2GRAPH):
 run: build/RezOS.iso
 	qemu-system-x86_64 -D log/qemu.log -cdrom $^ $(QEMU_ARGS)
 
+run-spice: build/RezOS.iso
+	qemu-system-x86_64 -D log/qemu.log -cdrom $^ -display spice-app $(QEMU_ARGS)
+
 clean:
 	rm -f build/*
 	rm -f isoroot/*
