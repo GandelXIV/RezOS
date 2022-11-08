@@ -11,7 +11,7 @@ pub use rlibcex;
 
 #[panic_handler]
 fn kpanic(_pi: &core::panic::PanicInfo<'_>) -> ! {
-    limine::print0(b"\nKERNEL PANIC!!!\n");
+    limine::print_bytes(b"\nKERNEL PANIC!!!\n");
     loop {}
 }
 
@@ -20,30 +20,31 @@ mod limine;
 
 #[no_mangle]
 pub extern "C" fn kmain() {
-    limine::print0(b"Hello World!\n");
-    // arch 
-    limine::print0(b"CPU Architecture: ");
+    limine::print_bytes(b"Hello World!\n");
+    // arch
+    limine::print_bytes(b"CPU Architecture: ");
     match arch::get_arch() {
-        arch::ArchType::X86_64 => limine::print0(b"x86_64"),
-        arch::ArchType::Arm64 => limine::print0(b"Arm64/AArch64"),
+        arch::ArchType::X86_64 => limine::print_bytes(b"x86_64"),
+        arch::ArchType::Arm64 => limine::print_bytes(b"Arm64/AArch64"),
     };
     // boot loader
     let (blname, blversion) = limine::bootloader_info();
-    limine::print0(b"\n[Bootloader info]\n");
-    limine::print0(b"--> name: ");
-    limine::print0(blname);
-    limine::print0(b"\n--> version: ");
-    limine::print0(blversion);
-    limine::print0(b"\n");
+    limine::print_bytes(b"\n[Bootloader info]\n");
+    limine::print_bytes(b"--> name: ");
+    limine::print_bytes(blname);
+    limine::print_bytes(b"\n--> version: ");
+    limine::print_bytes(blversion);
+    limine::print_bytes(b"\n");
     // memory map
-    limine::print0(b"[Memory Map]\n");
-    let mm = limine::memory_map();
-    // TODO: print region area
-    for region in mm {
-        limine::print0(region.typ.into());
-        limine::print0(b" (X - X)\n");
+    limine::print_bytes(b"[Memory Map]\n");
+    for region in limine::memory_map() {
+        let (start, end) = region.range;
+        limine::print_bytes(region.typ.into());
+        limine::print_hex(start);
+        limine::print_bytes(b" - ");
+        limine::print_hex(end);
+        limine::print_bytes(b"\n");
     }
-    
-    limine::print0(b"Nothing to do!\n");
+    limine::print_bytes(b"\nNothing to do!\n");
     loop {}
 }

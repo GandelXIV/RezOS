@@ -1,11 +1,11 @@
 // This module handles all things limine
 // See more about the protocol: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md
+use core::convert::TryFrom;
 use core::ffi::CStr;
 use core::fmt::Write;
+use core::iter::Iterator;
 use core::ptr::NonNull;
 use core::str;
-use core::convert::TryFrom;
-use core::iter::Iterator;
 use lazy_static::lazy_static;
 use spin::Mutex;
 
@@ -40,9 +40,24 @@ lazy_static! {
 
 // public interface to print to TERM0
 // accepts non ASCII (non utf8 strings) -> b"Hello"
-pub fn print0(s: &[u8]) {
+pub fn print_bytes(s: &[u8]) {
     let access = TERM0.lock();
     ((access).write)(access.get_terminal(), s, s.len());
+}
+
+pub fn print_hex(mut n: usize) {
+    let mut x: [u8; 16] = [0; 16];
+    for i in 0..16 {
+        let d = (n % 16) as u8;
+        if d < 10 {
+            x[15 - i] = d + 48;
+        } else {
+            x[15 - i] = d + 55;
+        }
+        n /= 16;
+    }
+    let access = TERM0.lock();
+    ((access).write)(access.get_terminal(), &x, x.len());
 }
 
 // ======= Boot Info feature
@@ -98,10 +113,10 @@ struct ResponseMemoryMap {
 struct MemoryMapEntry {
     base: u64,
     length: u64,
-    typ: u64, // cast to MemmapEntryType 
+    typ: u64, // cast to MemmapEntryType
 }
 
-// public 
+// public
 
 pub enum MemmapEntryType {
     Usable,
@@ -115,8 +130,8 @@ pub enum MemmapEntryType {
 }
 
 impl TryFrom<u64> for MemmapEntryType {
-    type Error=();
-    
+    type Error = ();
+
     fn try_from(value: u64) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(Self::Usable),
@@ -136,22 +151,18 @@ impl TryFrom<u64> for MemmapEntryType {
 impl Into<&'static [u8]> for MemmapEntryType {
     fn into(self) -> &'static [u8] {
         match self {
-            MemmapEntryType::Usable => b"Usable",
-            MemmapEntryType::Reserved => b"Reserved",
-            MemmapEntryType::AcpiReclaimable => b"AcpiReclaimable",
-            MemmapEntryType::AcpiNvs => b"AcpiNvs",
-            MemmapEntryType::BadMemory => b"BadMemory",
-            MemmapEntryType::BootloaderReclaimable => b"BootloaderReclaimable",
-            MemmapEntryType::KernelAndModules => b"KernelAndModules",
-            MemmapEntryType::MemmapFramebuffer => b"MemmapFramebuffer",
+            MemmapEntryType::Usable => b"Usable              ",
+            MemmapEntryType::Reserved => b"Reserved            ",
+            MemmapEntryType::AcpiReclaimable => b"ACPI Reclaimable    ",
+            MemmapEntryType::AcpiNvs => b"ACPI NVS            ",
+            MemmapEntryType::BadMemory => b"Bad Memory!         ",
+            MemmapEntryType::BootloaderReclaimable => b"BL Reclaimable      ",
+            MemmapEntryType::KernelAndModules => b"Kernel & Modules    ",
+            MemmapEntryType::MemmapFramebuffer => b"Memmap Framebuffer  ",
         }
     }
 }
 
-// THIS FUNCTION CAUSES A TRIPLE FAULT AND I DONT KNOW WHYYYYY
-// THE POINTER DEREF IS NOT THE PROBLEM BUT SOMETHING WITH MemmapList::new, BUT THE ONLY THING IT
-// DOES IS COPY DATA??? MY BEST GUESS FOR NOW IS SOME KIND OF MEMORY PROTECTION ERROR 'TIL I MAKE A
-// WORKING EXCEPTION HANDLER!!!!!!!!!!!!!!
 pub fn memory_map() -> MemoryMap {
     MemoryMap::new(unsafe { &*(LIMINE_REQUEST_MEMORY_MAP.response) })
 }
@@ -178,9 +189,9 @@ impl Iterator for MemoryMap {
         if self.icount >= self.resp_copy.entry_count {
             return None;
         }
-        
+
         let e = unsafe { &*((*(self.resp_copy.entries)).offset(self.icount as isize)) };
-        
+
         self.icount += 1;
         Some(Self::Item {
             range: (e.base as usize, (e.length + e.base) as usize),
@@ -220,9 +231,9 @@ impl TerminalWriter {
         self.term as *const Terminal
     }
 
-    // exposes the (width, height) of term 
+    // exposes the (width, height) of term
     fn dimensions(&self) -> (u64, u64) {
-        let t = unsafe { &* self.get_terminal() };
+        let t = unsafe { &*self.get_terminal() };
         (t.columns, t.rows)
     }
 }
