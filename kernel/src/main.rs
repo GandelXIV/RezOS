@@ -21,6 +21,9 @@ mod limine;
 #[no_mangle]
 pub extern "C" fn kmain() {
     limine::print_bytes(b"Hello World!\n");
+    limine::print_bytes(b"UNIX Boot time: ");
+    limine::print_dec(limine::boot_time_stamp() as usize);
+    limine::print_bytes(b"\n");
     // arch
     limine::print_bytes(b"CPU Architecture: ");
     match arch::get_arch() {

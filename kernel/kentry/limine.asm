@@ -9,12 +9,15 @@ MAGIC_TERMINAL_A equ 0xc8ac59310c2b0844
 MAGIC_TERMINAL_B equ 0xa68d0c7265d38878
 MAGIC_MEMORY_MAP_A equ 0x67cf3d9d378a806f
 MAGIC_MEMORY_MAP_B equ 0xe304acdfc50c3c62
+MAGIC_BOOT_TIME_A equ 0x502746e184c088aa
+MAGIC_BOOT_TIME_B equ 0xfbc5ec83e6327893
 
 ; REQUESTS 
 
 extern LIMINE_REQUEST_TERMINAL
 extern LIMINE_REQUEST_BOOT_INFO
 extern LIMINE_REQUEST_MEMORY_MAP
+extern LIMINE_REQUEST_BOOT_TIME
 
 LIMINE_REQUEST_BOOT_INFO:
 .common1  dq MAGIC_COMMON_A
@@ -45,6 +48,16 @@ LIMINE_REQUEST_MEMORY_MAP:
 .revision dq 0
 ; pointer to the response
 .response dq 0
+
+LIMINE_REQUEST_BOOT_TIME:
+.common1  dq MAGIC_COMMON_A
+.common2  dq MAGIC_COMMON_B
+.feat1    dq MAGIC_BOOT_TIME_A
+.feat2    dq MAGIC_BOOT_TIME_B
+.revision dq 0
+; pointer to the response
+.response dq 0
+
 
 ; keep this on the bottom
 CALLBACK:

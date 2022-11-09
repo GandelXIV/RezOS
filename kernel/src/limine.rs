@@ -30,6 +30,7 @@ extern "C" {
     static LIMINE_REQUEST_BOOT_INFO: RequestBootInfo;
     static LIMINE_REQUEST_TERMINAL: RequestTerminal;
     static LIMINE_REQUEST_MEMORY_MAP: RequestMemoryMap;
+    static LIMINE_REQUEST_BOOT_TIME: RequestBootTime;
 }
 
 lazy_static! {
@@ -46,15 +47,27 @@ pub fn print_bytes(s: &[u8]) {
 }
 
 pub fn print_hex(mut n: usize) {
-    let mut x: [u8; 16] = [0; 16];
-    for i in 0..16 {
+    let mut x: [u8; 18] = [0; 18];
+    x[0] = b'0';
+    x[1] = b'x';
+    for i in 0..14 {
         let d = (n % 16) as u8;
         if d < 10 {
-            x[15 - i] = d + 48;
+            x[17 - i] = d + 48;
         } else {
-            x[15 - i] = d + 55;
+            x[17 - i] = d + 55;
         }
         n /= 16;
+    }
+    let access = TERM0.lock();
+    ((access).write)(access.get_terminal(), &x, x.len());
+}
+
+pub fn print_dec(mut n: usize) {
+    let mut x: [u8; 20] = [0; 20];
+    for i in 0..x.len() {
+        x[19 - i] = (n % 10 + 48) as u8;
+        n /= 10;
     }
     let access = TERM0.lock();
     ((access).write)(access.get_terminal(), &x, x.len());
@@ -204,6 +217,40 @@ impl Iterator for MemoryMap {
 pub struct MemmapItem {
     pub range: (usize, usize),
     pub typ: MemmapEntryType,
+}
+
+// ======= Boot Time feature
+// See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#boot-time-feature
+
+#[repr(C)]
+struct RequestBootTime {
+    id: [u64; 4],
+    revision: u64,
+    response: *const ResponseBootTime,
+}
+
+#[repr(C)]
+struct ResponseBootTime {
+    revision: u64,
+    time: i64,
+}
+
+pub struct Time {
+    pub year: u16,
+    pub month: u8,
+    pub day: u8,
+    pub hour: u8,
+    pub minute: u8,
+    pub second: u8,
+}
+
+// parses the unix time stamp into a more readable structure (Time)
+pub fn boot_time() -> Time {
+    todo!()
+}
+
+pub fn boot_time_stamp() -> i64 {
+    unsafe { (*LIMINE_REQUEST_BOOT_TIME.response).time }
 }
 
 // ======= Terminal feature
