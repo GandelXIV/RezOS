@@ -21,6 +21,7 @@ mod limine;
 #[no_mangle]
 pub extern "C" fn kmain() {
     limine::print_bytes(b"Hello World!\n");
+    limine::print_bytes(b"[ Hardware Info ]\n");
     limine::print_bytes(b"UNIX Boot time: ");
     limine::print_dec(limine::boot_time_stamp() as usize);
     limine::print_bytes(b"\n");
@@ -32,14 +33,14 @@ pub extern "C" fn kmain() {
     };
     // boot loader
     let (blname, blversion) = limine::bootloader_info();
-    limine::print_bytes(b"\n[Bootloader info]\n");
-    limine::print_bytes(b"--> name: ");
+    limine::print_bytes(b"\n[ Bootloader info ]\n");
+    limine::print_bytes(b"name: ");
     limine::print_bytes(blname);
-    limine::print_bytes(b"\n--> version: ");
+    limine::print_bytes(b"\nversion: ");
     limine::print_bytes(blversion);
     limine::print_bytes(b"\n");
     // memory map
-    limine::print_bytes(b"[Memory Map]\n");
+    limine::print_bytes(b"[ Memory Map ]\n");
     for region in limine::memory_map() {
         let (start, end) = region.range;
         limine::print_bytes(region.typ.into());
@@ -48,6 +49,12 @@ pub extern "C" fn kmain() {
         limine::print_hex(end);
         limine::print_bytes(b"\n");
     }
+    limine::print_bytes(b"[ Kernel Address ]\n");
+    limine::print_bytes(b"physical:  ");
+    limine::print_hex(limine::kernel_address_physical());
+    limine::print_bytes(b"\nvirtual:   ");
+    limine::print_hex(limine::kernel_address_virtual());
+    limine::print_bytes(b"\n");
     limine::print_bytes(b"\nNothing to do!\n");
     loop {}
 }

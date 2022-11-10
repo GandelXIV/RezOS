@@ -31,6 +31,7 @@ extern "C" {
     static LIMINE_REQUEST_TERMINAL: RequestTerminal;
     static LIMINE_REQUEST_MEMORY_MAP: RequestMemoryMap;
     static LIMINE_REQUEST_BOOT_TIME: RequestBootTime;
+    static LIMINE_REQUEST_KERNEL_ADDRESS: RequestKernelAddress;
 }
 
 lazy_static! {
@@ -142,6 +143,7 @@ pub enum MemmapEntryType {
     MemmapFramebuffer,
 }
 
+// described in the limine protocol specs
 impl TryFrom<u64> for MemmapEntryType {
     type Error = ();
 
@@ -251,6 +253,29 @@ pub fn boot_time() -> Time {
 
 pub fn boot_time_stamp() -> i64 {
     unsafe { (*LIMINE_REQUEST_BOOT_TIME.response).time }
+}
+
+// ======= Kernel Address feature 
+// See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#kernel-address-feature
+
+struct RequestKernelAddress {
+    id: [u64; 4],
+    revision: u64,
+    response: *const ResponseKernelAddress,
+}
+
+struct ResponseKernelAddress {
+    revision: u64,
+    physical_base: u64,
+    virtual_base: u64,
+}
+
+pub fn kernel_address_physical() -> usize {
+    (unsafe { (*LIMINE_REQUEST_KERNEL_ADDRESS.response).physical_base }) as usize
+}
+
+pub fn kernel_address_virtual() -> usize {
+    (unsafe { (*LIMINE_REQUEST_KERNEL_ADDRESS.response).virtual_base }) as usize
 }
 
 // ======= Terminal feature
