@@ -1,11 +1,22 @@
 // This module handles direct memory region claimation
 use core::marker::PhantomData;
 use core::slice;
+use lazy_static::lazy_static;
+use spin::Mutex;
 
-// TODO: free when this drops
+// TODO: free region when this drops
 pub struct Ptr<'a, T: ?Sized> {
     raw: *mut T,
     _phantom: PhantomData<&'a T>,
+}
+
+impl<'a, T: ?Sized> Ptr<'a, T> {
+    fn new(x: *mut T) -> Self {
+        Self {
+            raw: x,
+            _phantom: PhantomData,
+        }
+    }
 }
 
 trait MemoryMapper {
@@ -15,55 +26,68 @@ trait MemoryMapper {
     // - must not be managed by another MemoryMapper
     unsafe fn manage(region: (usize, usize)) -> Self;
     // in case the region is occupied, returns Err(occupant region)
-    fn claim(&mut self, region: (usize, usize)) -> Result<Ptr<[u8]>, (usize, usize)>;
+    fn claim(&self, region: (usize, usize)) -> Result<Ptr<[u8]>, MemoryMapperError>;
     // returns true on success, and false if the region could not be found
-    fn free(&mut self, region: (usize, usize)) -> bool;
+    fn free(&self, region: (usize, usize)) -> bool;
 }
 
+pub enum MemoryMapperError {
+    AlreadyOccupiedBy((usize, usize)), // contains the occupant region
+    InvalidRegion((usize, usize)),     // contains the whole Mapper region
+    EntryLimit,                        // max number of entries has been reached
+}
 
 // TABLE MEMORY MAPPER
-// Simple implementation of MemoryMapper that uses a statically sized table to store entries. 
-const TABLE_SIZE: usize = 1024; // max amount of entries in the memory map
+// Simple implementation of MemoryMapper that uses a statically sized array(table) to store entries.
+const TABLE_SIZE: usize = 1024; // max amount of entries
 struct TableMemoryMapper {
     start: usize,
     end: usize,
-    table: [Option<(usize, usize)>; TABLE_SIZE],
+    table: Mutex<[Option<(usize, usize)>; TABLE_SIZE]>,
 }
 
 impl MemoryMapper for TableMemoryMapper {
     unsafe fn manage(region: (usize, usize)) -> Self {
-       Self {
-           start: region.0,
-           end: region.1,
-           table: [None; TABLE_SIZE],
-       } 
+        Self {
+            start: region.0,
+            end: region.1,
+            table: Mutex::new([None; TABLE_SIZE]),
+        }
     }
 
-    fn claim(&mut self, region: (usize, usize)) -> Result<Ptr<[u8]>, (usize, usize)> {
+    fn claim(&self, region: (usize, usize)) -> Result<Ptr<[u8]>, MemoryMapperError> {
         let (start, end) = region;
-        for taken in self.table.iter() {
+        if start < self.start || end > self.end {
+            return Err(MemoryMapperError::InvalidRegion((self.start, self.end)));
+        }
+
+        let mut table = self.table.lock();
+        for taken in table.iter() {
             if let Some((first, last)) = *taken {
                 if (first <= start && last >= start) || (first >= start && first <= end) {
-                    return Err((first, last));
+                    return Err(MemoryMapperError::AlreadyOccupiedBy((first, last)));
                 }
             }
         }
 
         let mut i = 0;
-        while let Some(_) = self.table[i] {
+        while let Some(_) = table[i] {
             i += 1
         }
-        self.table[i] = Some(region);
-        Ok(Ptr {
-            raw: unsafe { slice::from_raw_parts_mut(start as *mut u8, end - start) as *mut [u8] },
-            _phantom: PhantomData,
-        })
+        if i >= TABLE_SIZE {
+            return Err(MemoryMapperError::EntryLimit);
+        }
+        table[i] = Some(region);
+        Ok(Ptr::new(unsafe {
+            slice::from_raw_parts_mut(start as *mut u8, end - start) as *mut [u8]
+        }))
     }
 
-    fn free(&mut self, region: (usize, usize)) -> bool {
-        for (i, taken) in self.table.iter().enumerate() {
+    fn free(&self, region: (usize, usize)) -> bool {
+        let mut table = self.table.lock();
+        for (i, taken) in table.iter().enumerate() {
             if taken == &Some(region) {
-                self.table[i] = None;
+                table[i] = None;
                 return true;
             }
         }

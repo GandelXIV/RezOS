@@ -22,6 +22,13 @@ mod memman;
 #[no_mangle]
 pub extern "C" fn kmain() {
     limine::print_bytes(b"Hello World!\n");
+    init_limine();
+    limine::print_bytes(b"\nNothing to do!\n");
+    loop {}
+}
+
+fn init_limine() {
+    // hardware
     limine::print_bytes(b"[ Hardware Info ]\n");
     limine::print_bytes(b"UNIX Boot time: ");
     limine::print_dec(limine::boot_time_stamp() as usize);
@@ -50,12 +57,11 @@ pub extern "C" fn kmain() {
         limine::print_hex(end);
         limine::print_bytes(b"\n");
     }
+    // kernel address
     limine::print_bytes(b"[ Kernel Address ]\n");
     limine::print_bytes(b"physical:  ");
     limine::print_hex(limine::kernel_address_physical());
     limine::print_bytes(b"\nvirtual:   ");
     limine::print_hex(limine::kernel_address_virtual());
     limine::print_bytes(b"\n");
-    limine::print_bytes(b"\nNothing to do!\n");
-    loop {}
 }
