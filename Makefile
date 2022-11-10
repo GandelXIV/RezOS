@@ -7,6 +7,7 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 
 MAKEFILE2GRAPH = makefile2graph/make2graph
 LIMINE_BIN = limine/bin/
+RKERNEL_SRC = $(wildcard kernel/* kernel/src/* kernel/src/memman/* kernel/src/arch/* kernel/src/arch/arch_x86_64/* kernel/.cargo/* kernel/triple/*) 
 
 ############ OPTIONS
 
@@ -62,7 +63,7 @@ $(LIMINE_BIN)/limine-deploy $(LIMINE_BIN)/limine.sys $(LIMINE_BIN)/limine-cd-efi
 	make -C limine limine-deploy
 
 # the kernel itself compiles to a static library that gets linked to kentry.asm which holds the entry point and some additional structures and functions (such as limine requests)
-build/kernel.bin: build/kentry.o $(wildcard kernel/* kernel/src/* kernel/src/io/* kernel/src/arch/* kernel/.cargo/* kernel/triple/*)
+build/kernel.bin: build/kentry.o $(RKERNEL_SRC)	
 	cd kernel/ && cargo build --target triple/$(KERNEL_TRIPLE).json --lib $(KERNEL_BUILD_RELEASE)
 	ld -T kernel/kernel.ld $< $(RKERNEL_PATH) -o $@
 	
