@@ -178,6 +178,7 @@ impl Into<&'static [u8]> for MemmapEntryType {
     }
 }
 
+// extern interface function used by the rest of the kernel
 pub fn memory_map() -> MemoryMap {
     MemoryMap::new(unsafe { &*(LIMINE_REQUEST_MEMORY_MAP.response) })
 }
@@ -255,15 +256,17 @@ pub fn boot_time_stamp() -> i64 {
     unsafe { (*LIMINE_REQUEST_BOOT_TIME.response).time }
 }
 
-// ======= Kernel Address feature 
+// ======= Kernel Address feature
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#kernel-address-feature
 
+#[repr(C)]
 struct RequestKernelAddress {
     id: [u64; 4],
     revision: u64,
     response: *const ResponseKernelAddress,
 }
 
+#[repr(C)]
 struct ResponseKernelAddress {
     revision: u64,
     physical_base: u64,
