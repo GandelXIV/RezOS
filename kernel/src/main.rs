@@ -22,33 +22,38 @@ mod memman;
 #[no_mangle]
 pub extern "C" fn kmain() {
     limine::print_bytes(b"Hello World!\n");
-    init_limine();
-    limine::print_bytes(b"\nNothing to do!\n");
-    loop {}
-}
 
-fn init_limine() {
     // hardware
     limine::print_bytes(b"[ Hardware Info ]\n");
     limine::print_bytes(b"UNIX Boot time: ");
-    limine::print_dec(limine::boot_time_stamp() as usize);
+    let boot_time = limine::boot_time_stamp();
+    limine::print_dec(boot_time as usize);
     limine::print_bytes(b"\n");
+
     // arch
     limine::print_bytes(b"CPU Architecture: ");
     match arch::get_arch() {
         arch::ArchType::X86_64 => limine::print_bytes(b"x86_64"),
         arch::ArchType::Arm64 => limine::print_bytes(b"Arm64/AArch64"),
     };
+
     // boot loader
-    let (blname, blversion) = limine::bootloader_info();
+    let (bootloader_name, bootloader_version) = limine::bootloader_info();
     limine::print_bytes(b"\n[ Bootloader info ]\n");
     limine::print_bytes(b"name: ");
-    limine::print_bytes(blname);
+    limine::print_bytes(bootloader_name);
     limine::print_bytes(b"\nversion: ");
-    limine::print_bytes(blversion);
+    limine::print_bytes(bootloader_version);
     limine::print_bytes(b"\n");
+
     // memory map
     limine::print_bytes(b"[ Memory Map ]\n");
+
+    let ram_size = limine::memory_map().last().unwrap().range.1;
+    use crate::memman::map::MemoryMapper;
+    let _x = unsafe { memman::map::TableMemoryMapper::manage((0, ram_size)) };
+    //unsafe { memman::map::set_global((0, ram_size)) };
+
     for region in limine::memory_map() {
         let (start, end) = region.range;
         limine::print_bytes(region.typ.into());
@@ -57,15 +62,22 @@ fn init_limine() {
         limine::print_hex(end);
         limine::print_bytes(b"\n");
     }
+
     // kernel address
     limine::print_bytes(b"[ Kernel Address ]\n");
     limine::print_bytes(b"physical:  ");
-    limine::print_hex(limine::kernel_address_physical());
+    let kernel_physical_address = limine::kernel_address_physical();
+    limine::print_hex(kernel_physical_address);
+    let kernel_virtual_address = limine::kernel_address_virtual();
     limine::print_bytes(b"\nvirtual:   ");
-    limine::print_hex(limine::kernel_address_virtual());
+    limine::print_hex(kernel_virtual_address);
     limine::print_bytes(b"\n");
     // HHDM
     limine::print_bytes(b"HHDM: ");
-    limine::print_hex(limine::hhdm());
+    let hhdm = limine::hhdm();
+    limine::print_hex(hhdm);
     limine::print_bytes(b"\n");
+
+    limine::print_bytes(b"\nNothing to do!\n");
+    loop {}
 }
