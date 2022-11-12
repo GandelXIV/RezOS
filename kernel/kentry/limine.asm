@@ -13,7 +13,8 @@ MAGIC_BOOT_TIME_A equ 0x502746e184c088aa
 MAGIC_BOOT_TIME_B equ 0xfbc5ec83e6327893
 MAGIC_KERNEL_ADRESS_A equ 0x71ba76863cc55f63 
 MAGIC_KERNEL_ADRESS_B equ 0xb2644a48c516a487
-
+MAGIC_HHDM_A equ 0x48dcf1cb8ad2b852
+MAGIC_HDDM_B equ 0x63984e959a98244b
 
 ; REQUESTS 
 
@@ -22,6 +23,7 @@ extern LIMINE_REQUEST_BOOT_INFO
 extern LIMINE_REQUEST_MEMORY_MAP
 extern LIMINE_REQUEST_BOOT_TIME
 extern LIMINE_REQUEST_KERNEL_ADDRESS
+extern LIMINE_REQUEST_HHDM
 
 LIMINE_REQUEST_BOOT_INFO:
 .common1  dq MAGIC_COMMON_A
@@ -71,6 +73,14 @@ LIMINE_REQUEST_KERNEL_ADDRESS:
 ; pointer to the response
 .response dq 0
 
+LIMINE_REQUEST_HHDM:
+.common1  dq MAGIC_COMMON_A
+.common2  dq MAGIC_COMMON_B
+.feat1    dq MAGIC_HHDM_A
+.feat2    dq MAGIC_HDDM_B
+.revision dq 0
+; pointer to the response
+.response dq 0
 
 ; keep this on the bottom
 CALLBACK:

@@ -34,11 +34,11 @@ trait MemoryMapper {
 pub enum MemoryMapperError {
     AlreadyOccupiedBy((usize, usize)), // contains the occupant region
     InvalidRegion((usize, usize)),     // contains the whole Mapper region
-    EntryLimit,                        // max number of entries has been reached
 }
 
 // TABLE MEMORY MAPPER
 // Simple implementation of MemoryMapper that uses a statically sized array(table) to store entries.
+// WARNING: will panic if table gets full
 const TABLE_SIZE: usize = 1024; // max amount of entries
 struct TableMemoryMapper {
     start: usize,
@@ -75,7 +75,7 @@ impl MemoryMapper for TableMemoryMapper {
             i += 1
         }
         if i >= TABLE_SIZE {
-            return Err(MemoryMapperError::EntryLimit);
+            panic!("Maximum number of MemoryMapper entries reached!");
         }
         table[i] = Some(region);
         Ok(Ptr::new(unsafe {

@@ -64,4 +64,8 @@ fn init_limine() {
     limine::print_bytes(b"\nvirtual:   ");
     limine::print_hex(limine::kernel_address_virtual());
     limine::print_bytes(b"\n");
+    // HHDM
+    limine::print_bytes(b"HHDM: ");
+    limine::print_hex(limine::hhdm());
+    limine::print_bytes(b"\n");
 }

@@ -32,6 +32,7 @@ extern "C" {
     static LIMINE_REQUEST_MEMORY_MAP: RequestMemoryMap;
     static LIMINE_REQUEST_BOOT_TIME: RequestBootTime;
     static LIMINE_REQUEST_KERNEL_ADDRESS: RequestKernelAddress;
+    static LIMINE_REQUEST_HHDM: RequestHHDM;
 }
 
 lazy_static! {
@@ -279,6 +280,26 @@ pub fn kernel_address_physical() -> usize {
 
 pub fn kernel_address_virtual() -> usize {
     (unsafe { (*LIMINE_REQUEST_KERNEL_ADDRESS.response).virtual_base }) as usize
+}
+
+// ======= HHDM (higher half direct map) feature
+// See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#hhdm-higher-half-direct-map-feature
+
+#[repr(C)]
+struct RequestHHDM {
+    id: [u64; 4],
+    revision: u64,
+    response: *const ResponseHHDM,
+}
+
+#[repr(C)]
+struct ResponseHHDM {
+    revision: u64,
+    offset: u64, // virtual address of the beginning of the HHDM (higher half direct map)
+}
+
+pub fn hhdm() -> usize {
+    (unsafe { (*LIMINE_REQUEST_HHDM.response).offset }) as usize
 }
 
 // ======= Terminal feature
