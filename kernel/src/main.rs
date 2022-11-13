@@ -50,9 +50,7 @@ pub extern "C" fn kmain() {
     limine::print_bytes(b"[ Memory Map ]\n");
 
     let ram_size = limine::memory_map().last().unwrap().range.1;
-    use crate::memman::map::MemoryMapper;
-    let _x = unsafe { memman::map::TableMemoryMapper::manage((0, ram_size)) };
-    //unsafe { memman::map::set_global((0, ram_size)) };
+    unsafe { memman::map::set_global((0, ram_size)) };
 
     for region in limine::memory_map() {
         let (start, end) = region.range;

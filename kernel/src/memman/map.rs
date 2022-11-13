@@ -57,15 +57,8 @@ pub enum MemoryMapperError {
 // TABLE MEMORY MAPPER
 // Simple implementation of MemoryMapper that uses a statically sized array(table) to store entries.
 // WARNING: will panic if table gets full
-
-
-
-// INFO: TableMemoryMapper::manage() triple faults when TABLE_SIZE is 1024, but at 100 it doesnt
-// TODO IMPORTANT: Research this
-
-
-
-const TABLE_SIZE: usize = 100; // max amount of entries
+// WARNING: If TABLE_SIZE set at >337, it may triple fault(no idea why)
+const TABLE_SIZE: usize = 300; // max amount of entries
 pub struct TableMemoryMapper {
     start: usize,
     end: usize,
