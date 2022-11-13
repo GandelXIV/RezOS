@@ -13,7 +13,7 @@ pub unsafe fn set_global(region: (usize, usize)) {
     GLOBAL_MEMORY_MAPPER.call_once(|| GlobalMemoryMapper::manage(region));
 }
 
-pub fn global_claim(region: (usize, usize)) -> Result<Ptr<'static, [u8]>, MemoryMapperError> {
+pub fn claim_global(region: (usize, usize)) -> Result<Ptr<'static, [u8]>, MemoryMapperError> {
     GLOBAL_MEMORY_MAPPER
         .get()
         .expect("GLOBAL_MEMORY_MAPPER not setup!")
@@ -57,8 +57,8 @@ pub enum MemoryMapperError {
 // TABLE MEMORY MAPPER
 // Simple implementation of MemoryMapper that uses a statically sized array(table) to store entries.
 // WARNING: will panic if table gets full
-// WARNING: If TABLE_SIZE set at >337, it may triple fault(no idea why)
-const TABLE_SIZE: usize = 300; // max amount of entries
+// WARNING TODO INVESTIGATE: Sometimes randomly triple faults, lowering TABLE_SIZE fixes the issue
+const TABLE_SIZE: usize = 400; // max amount of entries
 pub struct TableMemoryMapper {
     start: usize,
     end: usize,

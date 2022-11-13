@@ -81,11 +81,13 @@ $(MAKEFILE2GRAPH):
 
 .PHONY: run clean deep-clean
 
+RUN_ARGS = -D log/qemu.log -m 8G -cdrom 
+
 run: build/RezOS.iso
-	qemu-system-x86_64 -D log/qemu.log -cdrom $^ $(QEMU_ARGS)
+	qemu-system-x86_64 $(RUN_ARGS) $^ $(QEMU_ARGS)
 
 run-spice: build/RezOS.iso
-	qemu-system-x86_64 -D log/qemu.log -cdrom $^ -display spice-app $(QEMU_ARGS)
+	qemu-system-x86_64 $(RUN_ARGS) $^ -display spice-app $(QEMU_ARGS)
 
 clean:
 	rm -f build/*

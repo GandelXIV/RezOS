@@ -15,6 +15,8 @@ MAGIC_KERNEL_ADRESS_A equ 0x71ba76863cc55f63
 MAGIC_KERNEL_ADRESS_B equ 0xb2644a48c516a487
 MAGIC_HHDM_A equ 0x48dcf1cb8ad2b852
 MAGIC_HDDM_B equ 0x63984e959a98244b
+MAGIC_STACK_SIZE_A equ 0x224ef0460a8e8926
+MAGIC_STACK_SIZE_B equ 0xe1cb0fc25f46ea3d
 
 ; REQUESTS 
 
@@ -24,6 +26,8 @@ extern LIMINE_REQUEST_MEMORY_MAP
 extern LIMINE_REQUEST_BOOT_TIME
 extern LIMINE_REQUEST_KERNEL_ADDRESS
 extern LIMINE_REQUEST_HHDM
+extern LIMINE_REQUEST_STACK_SIZE
+
 
 LIMINE_REQUEST_BOOT_INFO:
 .common1  dq MAGIC_COMMON_A
@@ -81,6 +85,19 @@ LIMINE_REQUEST_HHDM:
 .revision dq 0
 ; pointer to the response
 .response dq 0
+
+LIMINE_REQUEST_STACK_SIZE:
+.common1  dq MAGIC_COMMON_A
+.common2  dq MAGIC_COMMON_B
+.feat1    dq MAGIC_STACK_SIZE_A
+.feat2    dq MAGIC_STACK_SIZE_B
+.revision dq 0
+; pointer to the response
+.response dq 0
+; requested stack size
+; 16 MiB to make sure
+.size     dq 0xFFFFFF
+
 
 ; keep this on the bottom
 CALLBACK:
