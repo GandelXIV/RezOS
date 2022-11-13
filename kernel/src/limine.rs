@@ -32,6 +32,8 @@ extern "C" {
     static LIMINE_REQUEST_MEMORY_MAP: RequestMemoryMap;
     static LIMINE_REQUEST_BOOT_TIME: RequestBootTime;
     static LIMINE_REQUEST_KERNEL_ADDRESS: RequestKernelAddress;
+    static LIMINE_REQUEST_HHDM: RequestHHDM;
+    static LIMINE_REQUEST_STACK_SIZE: RequestStackSize;
 }
 
 lazy_static! {
@@ -178,6 +180,7 @@ impl Into<&'static [u8]> for MemmapEntryType {
     }
 }
 
+// extern interface function used by the rest of the kernel
 pub fn memory_map() -> MemoryMap {
     MemoryMap::new(unsafe { &*(LIMINE_REQUEST_MEMORY_MAP.response) })
 }
@@ -255,15 +258,17 @@ pub fn boot_time_stamp() -> i64 {
     unsafe { (*LIMINE_REQUEST_BOOT_TIME.response).time }
 }
 
-// ======= Kernel Address feature 
+// ======= Kernel Address feature
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#kernel-address-feature
 
+#[repr(C)]
 struct RequestKernelAddress {
     id: [u64; 4],
     revision: u64,
     response: *const ResponseKernelAddress,
 }
 
+#[repr(C)]
 struct ResponseKernelAddress {
     revision: u64,
     physical_base: u64,
@@ -276,6 +281,42 @@ pub fn kernel_address_physical() -> usize {
 
 pub fn kernel_address_virtual() -> usize {
     (unsafe { (*LIMINE_REQUEST_KERNEL_ADDRESS.response).virtual_base }) as usize
+}
+
+// ======= HHDM (higher half direct map) feature
+// See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#hhdm-higher-half-direct-map-feature
+
+#[repr(C)]
+struct RequestHHDM {
+    id: [u64; 4],
+    revision: u64,
+    response: *const ResponseHHDM,
+}
+
+#[repr(C)]
+struct ResponseHHDM {
+    revision: u64,
+    offset: u64, // virtual address of the beginning of the HHDM (higher half direct map)
+}
+
+pub fn hhdm() -> usize {
+    (unsafe { (*LIMINE_REQUEST_HHDM.response).offset }) as usize
+}
+
+// ======= Stack Size feature
+// See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#stack-size-feature
+
+#[repr(C)]
+struct RequestStackSize {
+    id: [u64; 4],
+    revision: u64,
+    response: *const ResponseStackSize,
+    size: u64,
+}
+
+#[repr(C)]
+struct ResponseStackSize {
+    revision: u64,
 }
 
 // ======= Terminal feature

@@ -1,5 +1,6 @@
 section .text
 
+; included into .text to not get optimised out
 %include "kernel/kentry/limine.asm"
 
 extern kmain
