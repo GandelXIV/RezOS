@@ -6,7 +6,7 @@ use spin::once::Once;
 use spin::Mutex;
 
 pub type GlobalMemoryMapper = TableMemoryMapper;
-static GLOBAL_MEMORY_MAPPER: Once<GlobalMemoryMapper> = Once::new();
+pub static GLOBAL_MEMORY_MAPPER: Once<GlobalMemoryMapper> = Once::new();
 
 // WARNING: region must be usable or it may lead to undefined behaviour
 pub unsafe fn set_global(region: (usize, usize)) {
@@ -35,16 +35,19 @@ impl<'a, T: ?Sized> Ptr<'a, T> {
     }
 }
 
-pub trait MemoryMapper {
+// I -> iterator returned when memory map requested
+pub trait MemoryMapper<I: Iterator<Item=(usize, usize)>> {
     // SAFETY! region must adhere to the following:
     // - must have read & write priviliges for ring0
     // - must not hold any other already used structures
-    // - must not be managed by another MemoryMapper
+    // - must not be externally managed by another MemoryMapper
     unsafe fn manage(region: (usize, usize)) -> Self;
     // in case the region is occupied, returns Err(occupant region)
     fn claim(&self, region: (usize, usize)) -> Result<Ptr<[u8]>, MemoryMapperError>;
     // returns true on success, and false if the region could not be found
     unsafe fn free(&self, region: (usize, usize)) -> bool;
+
+    fn iter(&self) -> I;
 }
 
 pub enum MemoryMapperError {
@@ -57,7 +60,7 @@ pub enum MemoryMapperError {
 // TABLE MEMORY MAPPER
 // Simple implementation of MemoryMapper that uses a statically sized array(table) to store entries.
 // WARNING: will panic if table gets full
-// WARNING TODO INVESTIGATE: Sometimes randomly triple faults, lowering TABLE_SIZE fixes the issue
+
 const TABLE_SIZE: usize = 400; // max amount of entries
 pub struct TableMemoryMapper {
     start: usize,
@@ -65,7 +68,28 @@ pub struct TableMemoryMapper {
     table: Mutex<[Option<(usize, usize)>; TABLE_SIZE]>,
 }
 
-impl MemoryMapper for TableMemoryMapper {
+pub struct TableMap {
+    entries: [(usize, usize); TABLE_SIZE],
+    count: usize,
+    limit: usize,
+}
+
+impl Iterator for TableMap {
+    type Item = (usize, usize);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.count += 1;
+        match self.entries.get(self.count - 1) {
+            Some(x) => {
+                return if self.count > self.limit { None }
+                else { Some(*x) }
+            }
+            None => None,
+        }
+    }
+}
+
+impl MemoryMapper<TableMap> for TableMemoryMapper {
     unsafe fn manage(region: (usize, usize)) -> Self {
         Self {
             start: region.0,
@@ -120,5 +144,19 @@ impl MemoryMapper for TableMemoryMapper {
             }
         }
         false
+    }
+
+    fn iter(&self) -> TableMap {
+        let table = self.table.lock();
+        let mut tm = TableMap { count: 0, entries: [(0, 0); TABLE_SIZE], limit: 0 };
+        let mut i = 0;
+        for slot in table.iter() {
+            if let Some(e) = slot {
+                tm.entries[i] = *e;
+                i += 1;
+            }
+        }
+        tm.limit = i;
+        tm
     }
 }

@@ -62,6 +62,15 @@ pub extern "C" fn kmain() {
         limine::print_bytes(b"\n");
     }
 
+    /*
+    // log GLOBAL_MEMORY_MAPPER entries
+    use memman::map::MemoryMapper;
+    for a in memman::map::GLOBAL_MEMORY_MAPPER.get().unwrap().iter() {
+        limine::print_hex(a.0);
+        limine::print_bytes(b"\n");
+    }
+    */
+
     // kernel address
     limine::print_bytes(b"[ Kernel Address ]\n");
     limine::print_bytes(b"physical:  ");
