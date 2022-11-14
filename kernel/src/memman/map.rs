@@ -36,7 +36,7 @@ impl<'a, T: ?Sized> Ptr<'a, T> {
 }
 
 // I -> iterator returned when memory map requested
-pub trait MemoryMapper<I: Iterator<Item=(usize, usize)>> {
+pub trait MemoryMapper<I: Iterator<Item = (usize, usize)>> {
     // SAFETY! region must adhere to the following:
     // - must have read & write priviliges for ring0
     // - must not hold any other already used structures
@@ -81,8 +81,11 @@ impl Iterator for TableMap {
         self.count += 1;
         match self.entries.get(self.count - 1) {
             Some(x) => {
-                return if self.count > self.limit { None }
-                else { Some(*x) }
+                return if self.count > self.limit {
+                    None
+                } else {
+                    Some(*x)
+                }
             }
             None => None,
         }
@@ -148,7 +151,11 @@ impl MemoryMapper<TableMap> for TableMemoryMapper {
 
     fn iter(&self) -> TableMap {
         let table = self.table.lock();
-        let mut tm = TableMap { count: 0, entries: [(0, 0); TABLE_SIZE], limit: 0 };
+        let mut tm = TableMap {
+            count: 0,
+            entries: [(0, 0); TABLE_SIZE],
+            limit: 0,
+        };
         let mut i = 0;
         for slot in table.iter() {
             if let Some(e) = slot {

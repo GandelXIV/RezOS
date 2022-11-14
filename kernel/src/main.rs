@@ -80,6 +80,7 @@ pub extern "C" fn kmain() {
     limine::print_bytes(b"\nvirtual:   ");
     limine::print_hex(kernel_virtual_address);
     limine::print_bytes(b"\n");
+
     // HHDM
     limine::print_bytes(b"HHDM: ");
     let hhdm = limine::hhdm();
