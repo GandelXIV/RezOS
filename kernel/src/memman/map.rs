@@ -1,7 +1,4 @@
 // This module handles direct memory region claimation
-use core::marker::PhantomData;
-use core::slice;
-use lazy_static::lazy_static;
 use spin::once::Once;
 use spin::Mutex;
 
@@ -35,6 +32,7 @@ pub trait MemoryMapper<I: Iterator<Item = (usize, usize)>> {
     fn iter(&self) -> I;
 }
 
+#[derive(Debug)]
 pub enum MemoryMapperError {
     AlreadyOccupiedBy((usize, usize)), // contains the occupant region
     OutOfBound((usize, usize)),        // contains the valid Mapper region
@@ -56,7 +54,7 @@ impl<'a> MapArea {
 
     fn create_ptr<T>(&self, addr: usize) -> Option<*const T> {
         if self.validate(addr) {
-            return Some(addr as *const T)
+            return Some(addr as *const T);
         }
         // invalid address
         None
@@ -64,7 +62,7 @@ impl<'a> MapArea {
 
     unsafe fn get<T>(&self, ptr: *const T) -> Option<&'a T> {
         if self.validate(ptr as usize) {
-            return Some(&*ptr)
+            return Some(&*ptr);
         }
         // invalid address
         None
@@ -97,7 +95,7 @@ impl Iterator for TableMap {
         self.count += 1;
         match self.entries.get(self.count - 1) {
             Some(x) => {
-                return if self.count > self.limit {
+                if self.count > self.limit {
                     None
                 } else {
                     Some(*x)
@@ -138,7 +136,7 @@ impl MemoryMapper<TableMap> for TableMemoryMapper {
 
         // get first empty slot to store our entry
         let mut i = 0;
-        while let Some(_) = table[i] {
+        while table[i].is_some() {
             i += 1
         }
         // panic if no empty slot has been found
@@ -171,11 +169,9 @@ impl MemoryMapper<TableMap> for TableMemoryMapper {
             limit: 0,
         };
         let mut i = 0;
-        for slot in table.iter() {
-            if let Some(e) = slot {
-                tm.entries[i] = *e;
-                i += 1;
-            }
+        for slot in table.iter().flatten() {
+            tm.entries[i] = *slot;
+            i += 1;
         }
         tm.limit = i;
         tm

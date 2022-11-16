@@ -2,10 +2,7 @@
 // See more about the protocol: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md
 use core::convert::TryFrom;
 use core::ffi::CStr;
-use core::fmt::Write;
 use core::iter::Iterator;
-use core::ptr::NonNull;
-use core::str;
 use lazy_static::lazy_static;
 use spin::Mutex;
 

@@ -54,7 +54,7 @@ pub extern "C" fn kmain() {
 
     for region in limine::memory_map() {
         let (start, end) = region.range;
-        memman::map::claim_global(region.range);
+        memman::map::claim_global(region.range).unwrap();
         limine::print_bytes(region.typ.into());
         limine::print_hex(start);
         limine::print_bytes(b" - ");
@@ -88,5 +88,5 @@ pub extern "C" fn kmain() {
     limine::print_bytes(b"\n");
 
     limine::print_bytes(b"\nNothing to do!\n");
-    loop {}
+    panic!("Nothing to do!");
 }
