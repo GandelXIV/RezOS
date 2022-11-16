@@ -13,26 +13,11 @@ pub unsafe fn set_global(region: (usize, usize)) {
     GLOBAL_MEMORY_MAPPER.call_once(|| GlobalMemoryMapper::manage(region));
 }
 
-pub fn claim_global(region: (usize, usize)) -> Result<Ptr<'static, [u8]>, MemoryMapperError> {
+pub fn claim_global(region: (usize, usize)) -> Result<MapArea, MemoryMapperError> {
     GLOBAL_MEMORY_MAPPER
         .get()
         .expect("GLOBAL_MEMORY_MAPPER not setup!")
         .claim(region)
-}
-
-// TODO: free region when this drops
-pub struct Ptr<'a, T: ?Sized> {
-    raw: *mut T,
-    _phantom: PhantomData<&'a T>,
-}
-
-impl<'a, T: ?Sized> Ptr<'a, T> {
-    fn new(x: *mut T) -> Self {
-        Self {
-            raw: x,
-            _phantom: PhantomData,
-        }
-    }
 }
 
 // I -> iterator returned when memory map requested
@@ -43,7 +28,7 @@ pub trait MemoryMapper<I: Iterator<Item = (usize, usize)>> {
     // - must not be externally managed by another MemoryMapper
     unsafe fn manage(region: (usize, usize)) -> Self;
     // in case the region is occupied, returns Err(occupant region)
-    fn claim(&self, region: (usize, usize)) -> Result<Ptr<[u8]>, MemoryMapperError>;
+    fn claim(&self, region: (usize, usize)) -> Result<MapArea, MemoryMapperError>;
     // returns true on success, and false if the region could not be found
     unsafe fn free(&self, region: (usize, usize)) -> bool;
 
@@ -53,6 +38,37 @@ pub trait MemoryMapper<I: Iterator<Item = (usize, usize)>> {
 pub enum MemoryMapperError {
     AlreadyOccupiedBy((usize, usize)), // contains the occupant region
     OutOfBound((usize, usize)),        // contains the valid Mapper region
+}
+
+pub struct MapArea {
+    region: (usize, usize),
+}
+
+impl<'a> MapArea {
+    fn new(region: (usize, usize)) -> Self {
+        Self { region }
+    }
+
+    #[inline]
+    fn validate(&self, addr: usize) -> bool {
+        addr >= self.region.0 && addr <= self.region.1
+    }
+
+    fn create_ptr<T>(&self, addr: usize) -> Option<*const T> {
+        if self.validate(addr) {
+            return Some(addr as *const T)
+        }
+        // invalid address
+        None
+    }
+
+    unsafe fn get<T>(&self, ptr: *const T) -> Option<&'a T> {
+        if self.validate(ptr as usize) {
+            return Some(&*ptr)
+        }
+        // invalid address
+        None
+    }
 }
 
 // ========== Implementations
@@ -101,7 +117,7 @@ impl MemoryMapper<TableMap> for TableMemoryMapper {
         }
     }
 
-    fn claim(&self, region: (usize, usize)) -> Result<Ptr<[u8]>, MemoryMapperError> {
+    fn claim(&self, region: (usize, usize)) -> Result<MapArea, MemoryMapperError> {
         let (start, end) = region;
         // bound check the request
         if start < self.start || end > self.end {
@@ -131,9 +147,7 @@ impl MemoryMapper<TableMap> for TableMemoryMapper {
         }
 
         table[i] = Some(region);
-        Ok(Ptr::new(unsafe {
-            slice::from_raw_parts_mut(start as *mut u8, end - start) as *mut [u8]
-        }))
+        Ok(MapArea::new((start, end - start)))
     }
 
     // WARNING: calling free() on a region that is still used may lead to undefind behaviour

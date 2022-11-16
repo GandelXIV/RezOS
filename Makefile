@@ -34,6 +34,7 @@ ISODEPS = isoroot/kernel.bin isoroot/limine-cd.bin isoroot/limine-cd-efi.bin iso
 # main
 build/RezOS.iso: scripts/mk/mkiso.sh $(ISODEPS) Makefile
 	$< $@
+	@echo "Done!"
 
 isodeps: $(ISODEPS)
 	echo "Build all required dependencies!"
