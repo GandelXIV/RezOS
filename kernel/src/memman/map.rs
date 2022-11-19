@@ -1,4 +1,5 @@
 // This module handles direct memory region claimation
+use core::mem;
 use spin::once::Once;
 use spin::Mutex;
 
@@ -17,8 +18,10 @@ pub fn claim_global(region: (usize, usize)) -> Result<MapArea, MemoryMapperError
         .claim(region)
 }
 
+type MapItem = (usize, usize);
+
 // I -> iterator returned when memory map requested
-pub trait MemoryMapper<I: Iterator<Item = (usize, usize)>> {
+pub trait MemoryMapper<I: Iterator<Item = MapItem>> {
     // SAFETY! region must adhere to the following:
     // - must have read & write priviliges for ring0
     // - must not hold any other already used structures
@@ -26,10 +29,48 @@ pub trait MemoryMapper<I: Iterator<Item = (usize, usize)>> {
     unsafe fn manage(region: (usize, usize)) -> Self;
     // in case the region is occupied, returns Err(occupant region)
     fn claim(&self, region: (usize, usize)) -> Result<MapArea, MemoryMapperError>;
-    // returns true on success, and false if the region could not be found
-    unsafe fn free(&self, region: (usize, usize)) -> bool;
-
+    // WARNING: free() should panic if area was not found, because it implies one of the following:
+    //  1. the area was never claimed and the structure used has been invalid the whole time -> UB
+    //  2. the area was force_freed() which means it may have been claimed by some other entity in
+    //     the mean time -> UB
+    fn free(&self, area: MapArea);
+    // WARNING: if the region is part of a used living Area, this may lead to UB.
+    // Use ONLY if you are sure that the owning Area is dead/not used.
+    unsafe fn force_free(&self, region: (usize, usize)) {
+        self.free(MapArea::new(region));
+    }
+    // Iterate through claimed regions
     fn iter(&self) -> I;
+    // Iterator through unclaimed regions
+    fn gaps(&self) -> MapGaps<I> {
+        MapGaps {
+            iter: self.iter(),
+            last: self.dimensions().0,
+        }
+    }
+    // getters
+    fn dimensions(&self) -> MapItem;
+}
+
+pub struct MapGaps<I: Iterator<Item = MapItem>> {
+    iter: I,
+    last: usize,
+}
+
+impl<I> Iterator for MapGaps<I> where I: Iterator<Item = MapItem> {
+    type Item = MapItem;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(claimed) = self.iter.next() {
+            if claimed.0 > self.last {
+                let cache = self.last;
+                self.last = claimed.1;
+                return Some((cache, claimed.0))
+            }
+            self.last = claimed.1;
+        }
+        None
+    }
 }
 
 #[derive(Debug)]
@@ -43,17 +84,19 @@ pub struct MapArea {
 }
 
 impl<'a> MapArea {
+    // this function must be called only from inside MemoryMapper::claim() or MemoryMapper::force_free()
     fn new(region: (usize, usize)) -> Self {
         Self { region }
     }
 
     #[inline]
-    fn validate(&self, addr: usize) -> bool {
-        addr >= self.region.0 && addr <= self.region.1
+    fn validate<T>(&self, ptr: *const T) -> bool {
+        ptr as usize >= self.region.0
+            && ptr as usize + unsafe { mem::size_of_val_raw(ptr) } <= self.region.1
     }
 
     fn create_ptr<T>(&self, addr: usize) -> Option<*const T> {
-        if self.validate(addr) {
+        if self.validate(addr as *const T) {
             return Some(addr as *const T);
         }
         // invalid address
@@ -61,7 +104,7 @@ impl<'a> MapArea {
     }
 
     unsafe fn get<T>(&self, ptr: *const T) -> Option<&'a T> {
-        if self.validate(ptr as usize) {
+        if self.validate(ptr) {
             return Some(&*ptr);
         }
         // invalid address
@@ -128,7 +171,7 @@ impl MemoryMapper<TableMap> for TableMemoryMapper {
             // slot may be None and not hold an entry
             if let Some((first, last)) = *slot {
                 // cover all possible intersections of regions
-                if (first <= start && last >= start) || (first >= start && first <= end) {
+                if (first < start && last > start) || (first > start && first < end) {
                     return Err(MemoryMapperError::AlreadyOccupiedBy((first, last)));
                 }
             }
@@ -150,15 +193,19 @@ impl MemoryMapper<TableMap> for TableMemoryMapper {
 
     // WARNING: calling free() on a region that is still used may lead to undefind behaviour
     // returns true -> on success, false -> the target region has not been found
-    unsafe fn free(&self, region: (usize, usize)) -> bool {
+    fn free(&self, area: MapArea) {
         let mut table = self.table.lock();
+        let mut ai = None;
         for (i, taken) in table.iter().enumerate() {
-            if taken == &Some(region) {
-                table[i] = None;
-                return true;
+            if taken == &Some(area.region) {
+                ai = Some(i);
+                break;
             }
         }
-        false
+        match ai {
+            Some(i) => table[i] = None,
+            None => panic!("Poisoned MapArea could not be freed!"),
+        }
     }
 
     fn iter(&self) -> TableMap {
@@ -175,5 +222,9 @@ impl MemoryMapper<TableMap> for TableMemoryMapper {
         }
         tm.limit = i;
         tm
+    }
+
+    fn dimensions(&self) -> MapItem {
+        (self.start, self.end)
     }
 }

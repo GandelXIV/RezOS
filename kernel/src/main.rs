@@ -2,6 +2,7 @@
 #![no_main]
 #![crate_type = "staticlib"]
 #![feature(core_c_str)]
+#![feature(layout_for_ptr)]
 
 use core::panic::{self, PanicInfo};
 // Do not remove these imports, they prevent link errors
@@ -18,6 +19,7 @@ fn kpanic(_pi: &core::panic::PanicInfo<'_>) -> ! {
 mod arch;
 mod limine;
 mod memman;
+use memman::map::MemoryMapper; 
 
 #[no_mangle]
 pub extern "C" fn kmain() {
