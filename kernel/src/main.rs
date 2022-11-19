@@ -18,6 +18,7 @@ fn kpanic(_pi: &core::panic::PanicInfo<'_>) -> ! {
 
 mod arch;
 mod limine;
+mod log;
 mod memman;
 use memman::map::MemoryMapper; 
 
@@ -56,7 +57,10 @@ pub extern "C" fn kmain() {
 
     for region in limine::memory_map() {
         let (start, end) = region.range;
-        memman::map::claim_global(region.range).unwrap();
+        match region.typ {
+            limine::MemmapEntryType::Usable => {},
+            _ => { memman::map::claim_global(region.range).unwrap(); }
+        }
         limine::print_bytes(region.typ.into());
         limine::print_hex(start);
         limine::print_bytes(b" - ");

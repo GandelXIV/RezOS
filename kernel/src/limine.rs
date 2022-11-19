@@ -40,12 +40,13 @@ lazy_static! {
 }
 
 // public interface to print to TERM0
-// accepts non ASCII (non utf8 strings) -> b"Hello"
+// accepts ASCII (non utf8 strings) -> b"Hello"
 pub fn print_bytes(s: &[u8]) {
     let access = TERM0.lock();
     ((access).write)(access.get_terminal(), s, s.len());
 }
 
+// outdated function
 pub fn print_hex(mut n: usize) {
     let mut x: [u8; 18] = [0; 18];
     x[0] = b'0';
@@ -63,6 +64,7 @@ pub fn print_hex(mut n: usize) {
     ((access).write)(access.get_terminal(), &x, x.len());
 }
 
+// outdated function
 pub fn print_dec(mut n: usize) {
     let mut x: [u8; 20] = [0; 20];
     for i in 0..x.len() {
