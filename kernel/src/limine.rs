@@ -5,6 +5,7 @@ use core::ffi::CStr;
 use core::iter::Iterator;
 use lazy_static::lazy_static;
 use spin::Mutex;
+use crate::enum_names;
 
 // first two items in .id of all requests must be equal to the following magic
 // TODO: check this in init() for all requests
@@ -133,26 +134,7 @@ struct MemoryMapEntry {
 
 // public
 
-// implements Into<str> for any empty variant of a public enum
-macro_rules! enum_str {
-    (pub enum $name:ident {
-        $($variant:ident),*,
-    }) => {
-        pub enum $name {
-            $($variant),*
-        }
-
-        impl Into<&'static str> for $name {
-            fn into(self) -> &'static str {
-                match self {
-                    $($name::$variant => stringify!($variant)),*
-                }
-            }
-        }
-    };
-}
-
-enum_str! {
+enum_names! {
     pub enum MemmapEntryType {
         Usable,
         Reserved,

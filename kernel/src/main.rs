@@ -16,6 +16,7 @@ fn kpanic(_pi: &core::panic::PanicInfo<'_>) -> ! {
     loop {}
 }
 
+mod tools;
 mod arch;
 mod limine;
 mod log;
