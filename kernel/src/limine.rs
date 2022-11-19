@@ -133,15 +133,36 @@ struct MemoryMapEntry {
 
 // public
 
-pub enum MemmapEntryType {
-    Usable,
-    Reserved,
-    AcpiReclaimable,
-    AcpiNvs,
-    BadMemory,
-    BootloaderReclaimable,
-    KernelAndModules,
-    MemmapFramebuffer,
+// implements Into<str> for any empty variant of a public enum
+macro_rules! enum_str {
+    (pub enum $name:ident {
+        $($variant:ident),*,
+    }) => {
+        pub enum $name {
+            $($variant),*
+        }
+
+        impl Into<&'static str> for $name {
+            fn into(self) -> &'static str {
+                match self {
+                    $($name::$variant => stringify!($variant)),*
+                }
+            }
+        }
+    };
+}
+
+enum_str! {
+    pub enum MemmapEntryType {
+        Usable,
+        Reserved,
+        AcpiReclaimable,
+        AcpiNvs,
+        BadMemory,
+        BootloaderReclaimable,
+        KernelAndModules,
+        MemmapFramebuffer,
+    }
 }
 
 // described in the limine protocol specs
@@ -163,7 +184,7 @@ impl TryFrom<u64> for MemmapEntryType {
     }
 }
 
-// TODO: rewrite this using a macro or a derive
+// outdated function
 impl Into<&'static [u8]> for MemmapEntryType {
     fn into(self) -> &'static [u8] {
         match self {
