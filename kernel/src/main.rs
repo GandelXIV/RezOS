@@ -3,6 +3,10 @@
 #![crate_type = "staticlib"]
 #![feature(core_c_str)]
 #![feature(layout_for_ptr)]
+// required by const-bitfields
+#![feature(const_convert)] // optional, when using from/into conversion
+#![feature(const_mut_refs)] // always required
+#![feature(const_trait_impl)] // always required
 
 use core::panic::{self, PanicInfo};
 // Do not remove these imports, they prevent link errors
@@ -15,6 +19,8 @@ fn kpanic(_pi: &core::panic::PanicInfo<'_>) -> ! {
     log!("KERNEL PANIC!!!\n");
     loop {}
 }
+
+use arrayvec::ArrayVec;
 
 mod tools;
 mod arch;
@@ -50,12 +56,19 @@ pub extern "C" fn kmain() {
 
     let ram_size = limine::memory_map().last().unwrap().range.1;
     unsafe { memman::map::set_global((0, ram_size)) };
-
+    
+    // temporarly store MapAreas
+    let mut map_area_pool = ArrayVec::<memman::map::MapArea, 25>::new();
     for region in limine::memory_map() {
         let (start, end) = region.range;
         match region.typ {
             limine::MemmapEntryType::Usable => {},
-            _ => { memman::map::claim_global(region.range).unwrap(); }
+            _ => {
+                let ma = memman::map::claim_global(region.range).expect("Limine map entry could not be claimed!");
+                if let Err(e) = map_area_pool.try_push(ma) {
+                    log!("[ERROR] map_area_pool is full, limine entry will be dropped!\n");
+                }
+            }
         }
         let typ: &str = region.typ.into();
         log!("{:023} 0x{:016X} - 0x{:016X}\n", typ, start, end);
@@ -84,3 +97,4 @@ pub extern "C" fn kmain() {
     log!("Nothing to do!\n");
     panic!("Nothing to do!");
 }
+

@@ -2,6 +2,7 @@
 use core::mem;
 use spin::once::Once;
 use spin::Mutex;
+use crate::log;
 
 pub type GlobalMemoryMapper = TableMemoryMapper;
 pub static GLOBAL_MEMORY_MAPPER: Once<GlobalMemoryMapper> = Once::new();
@@ -109,6 +110,14 @@ impl<'a> MapArea {
         }
         // invalid address
         None
+    }
+}
+
+impl Drop for MapArea {
+    // if MapArea is dropped, it can no longer be safely free'd. If the area is allocated
+    // permanently its not much  of an issue, but otherwise it forces the use of the unsafe force_free
+    fn drop(&mut self) {
+        log!("[WARNING] Dropping MapArea handle for region {:016X} - {:016X}!\n", self.region.0, self.region.1)
     }
 }
 
