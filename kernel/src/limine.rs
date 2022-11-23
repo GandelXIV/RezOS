@@ -1,11 +1,11 @@
 // This module handles all things limine
 // See more about the protocol: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md
+use crate::enum_names;
 use core::convert::TryFrom;
 use core::ffi::CStr;
 use core::iter::Iterator;
 use lazy_static::lazy_static;
 use spin::Mutex;
-use crate::enum_names;
 
 // first two items in .id of all requests must be equal to the following magic
 // TODO: check this in init() for all requests

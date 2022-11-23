@@ -1,9 +1,9 @@
+use crate::limine;
 use arrayvec::ArrayString;
+use core::fmt;
+use core::fmt::{Arguments, Write};
 use lazy_static::lazy_static;
 use spin::Mutex;
-use core::fmt::{Write, Arguments};
-use core::fmt;
-use crate::limine;
 
 type GlobalLog = StaticLog;
 
@@ -12,7 +12,10 @@ lazy_static! {
 }
 
 pub fn print(msg: Arguments) {
-    GLOBAL_LOG.lock().write_fmt(msg).expect("Could not write to GLOBAL_LOG!")
+    GLOBAL_LOG
+        .lock()
+        .write_fmt(msg)
+        .expect("Could not write to GLOBAL_LOG!")
 }
 
 #[macro_export]
@@ -31,7 +34,7 @@ struct StaticLog {
 impl StaticLog {
     fn new() -> Self {
         Self {
-            content: ArrayString::<STATIC_LOG_MAX_CHARACTERS>::new()
+            content: ArrayString::<STATIC_LOG_MAX_CHARACTERS>::new(),
         }
     }
 }
@@ -45,4 +48,4 @@ impl Write for StaticLog {
         self.content.push_str(s);
         Ok(())
     }
-} 
+}
