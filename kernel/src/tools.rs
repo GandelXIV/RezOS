@@ -19,4 +19,10 @@ macro_rules! enum_names {
             }
         }
     };
+}   
+
+// TODO: rewrite this using generics
+pub fn bin_extract(x: u32, start: usize, end: usize) -> u32 {
+    (x >> start) & ( (1 << end) - 1)
 }
+

@@ -7,13 +7,19 @@
 use const_bitfield::bitfield;
 use x86::dtables::{lgdt, DescriptorTablePointer};
 #[macro_use]
-use crate::log;
+use crate::tools::bin_extract;
 
 const PRIVILEGE_KERNEL: u8 = 0;
 const PRIVILEGE_USER: u8 = 3;
 
 static GDT: &[SegmentDescriptor] = &[
     SegmentDescriptor::null(),
+    SegmentDescriptor::new_kernel_code16(),
+    SegmentDescriptor::new_kernel_data16(),
+    SegmentDescriptor::new_kernel_code32(),
+    SegmentDescriptor::new_kernel_data32(),
+    SegmentDescriptor::new_kernel_code64(),
+    SegmentDescriptor::new_kernel_data64(),
 ];
 
 bitfield! {
@@ -49,18 +55,33 @@ impl SegmentDescriptor {
     
     // addr: u20
     fn set_whole_limit(&mut self, addr: u32) {
-        todo!()
+        self.set_limit0(bin_extract(addr, 15, 0).try_into().unwrap());
+        self.set_limit1(bin_extract(addr, 19, 16).try_into().unwrap());
     }
 
     fn set_whole_base(&mut self, addr: u32) {
-        todo!()
+        self.set_base0(bin_extract(addr, 15, 0) as u16);
+        self.set_base1(bin_extract(addr, 23, 16) as u8);
+        self.set_base2(bin_extract(addr, 31, 24) as u8);
     }
 
-    // limitx & base& are ignored in 64 bit mode
     const fn new_kernel_code16() -> Self {
         todo!()
     }
 
+    const fn new_kernel_data16() -> Self {
+        todo!()
+    }
+
+    const fn new_kernel_code32() -> Self {
+        todo!()
+    }
+
+    const fn new_kernel_data32() -> Self {
+        todo!()
+    }
+
+    // limitx & base& are ignored in 64 bit mode because they cover the whole address space   
     const fn new_kernel_code64() -> Self {
         let mut sd = Self::null();
         sd.set_access_P(true); // enabled
