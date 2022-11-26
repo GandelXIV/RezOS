@@ -1,8 +1,8 @@
 // This module handles direct memory region claimation
+use crate::log;
 use core::mem;
 use spin::once::Once;
 use spin::Mutex;
-use crate::log;
 
 pub type GlobalMemoryMapper = TableMemoryMapper;
 pub static GLOBAL_MEMORY_MAPPER: Once<GlobalMemoryMapper> = Once::new();
@@ -58,7 +58,10 @@ pub struct MapGaps<I: Iterator<Item = MapItem>> {
     last: usize,
 }
 
-impl<I> Iterator for MapGaps<I> where I: Iterator<Item = MapItem> {
+impl<I> Iterator for MapGaps<I>
+where
+    I: Iterator<Item = MapItem>,
+{
     type Item = MapItem;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -66,7 +69,7 @@ impl<I> Iterator for MapGaps<I> where I: Iterator<Item = MapItem> {
             if claimed.0 > self.last {
                 let cache = self.last;
                 self.last = claimed.1;
-                return Some((cache, claimed.0))
+                return Some((cache, claimed.0));
             }
             self.last = claimed.1;
         }
@@ -117,7 +120,11 @@ impl Drop for MapArea {
     // if MapArea is dropped, it can no longer be safely free'd. If the area is allocated
     // permanently its not much  of an issue, but otherwise it forces the use of the unsafe force_free
     fn drop(&mut self) {
-        log!("[WARNING] Dropping MapArea handle for region {:016X} - {:016X}!\n", self.region.0, self.region.1)
+        log!(
+            "[WARNING] Dropping MapArea handle for region {:016X} - {:016X}!\n",
+            self.region.0,
+            self.region.1
+        )
     }
 }
 

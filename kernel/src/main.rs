@@ -22,12 +22,12 @@ fn kpanic(_pi: &core::panic::PanicInfo<'_>) -> ! {
 
 use arrayvec::ArrayVec;
 
-mod tools;
 mod arch;
 mod limine;
 mod log;
 mod memman;
-use memman::map::MemoryMapper; 
+mod tools;
+use memman::map::MemoryMapper;
 
 #[no_mangle]
 pub extern "C" fn kmain() {
@@ -44,27 +44,32 @@ pub extern "C" fn kmain() {
         arch::ArchType::X86_64 => log!("x86_64\n"),
         arch::ArchType::Arm64 => log!("Arm64/AArch64\n"),
     };
+    arch::init();
 
     // boot loader
     let (bootloader_name, bootloader_version) = limine::bootloader_info();
     log!("[ Bootloader info ]\n");
     log!("name: {}\n", core::str::from_utf8(bootloader_name).unwrap());
-    log!("version: {}\n", core::str::from_utf8(bootloader_version).unwrap());
+    log!(
+        "version: {}\n",
+        core::str::from_utf8(bootloader_version).unwrap()
+    );
 
     // memory map
     log!("[ Memory Map ]\n");
 
     let ram_size = limine::memory_map().last().unwrap().range.1;
     unsafe { memman::map::set_global((0, ram_size)) };
-    
-    // temporarly store MapAreas
+
     let mut map_area_pool = ArrayVec::<memman::map::MapArea, 25>::new();
+    map_area_pool.push(memman::map::claim_global((0, 1000)).unwrap());
     for region in limine::memory_map() {
         let (start, end) = region.range;
         match region.typ {
-            limine::MemmapEntryType::Usable => {},
+            limine::MemmapEntryType::Usable => {}
             _ => {
-                let ma = memman::map::claim_global(region.range).expect("Limine map entry could not be claimed!");
+                let ma = memman::map::claim_global(region.range)
+                    .expect("Limine map entry could not be claimed!");
                 if let Err(e) = map_area_pool.try_push(ma) {
                     log!("[ERROR] map_area_pool is full, limine entry will be dropped!\n");
                 }
@@ -97,4 +102,3 @@ pub extern "C" fn kmain() {
     log!("Nothing to do!\n");
     panic!("Nothing to do!");
 }
-

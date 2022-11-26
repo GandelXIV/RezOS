@@ -2,9 +2,16 @@ use super::ArchType;
 use x86;
 use x86_64;
 
+pub mod gdt;
+
 #[inline]
 pub const fn get_arch() -> ArchType {
     ArchType::X86_64
+}
+
+pub fn init() {
+    // load our GDT
+    gdt::init();
 }
 
 pub mod portio {
@@ -42,11 +49,5 @@ pub mod cpu {
     // WARNING: May fail with #UD if rdpid is not supported (check CPUID).
     pub unsafe fn read_id() -> u64 {
         x86::rdpid()
-    }
-}
-
-pub mod interrupt {
-    pub unsafe fn irq_disable() {
-        x86::irq::disable()
     }
 }
