@@ -16,6 +16,9 @@ KERNEL_BUILD_WITH_RELEASE ?= off
 # only x86_64 for now
 KERNEL_TRIPLE 	     ?= x86_64
 
+# can be set to another path
+CARGO ?= cargo
+
 ############ CONDITIONS
 
 ifeq ($(KERNEL_BUILD_WITH_RELEASE), on) 
@@ -65,7 +68,7 @@ $(LIMINE_BIN)/limine-deploy $(LIMINE_BIN)/limine.sys $(LIMINE_BIN)/limine-cd-efi
 
 # the kernel itself compiles to a static library that gets linked to kentry.asm which holds the entry point and some additional structures and functions (such as limine requests)
 build/kernel.bin: build/kentry.o $(RKERNEL_SRC)	
-	cd kernel/ && cargo build --target triple/$(KERNEL_TRIPLE).json --lib $(KERNEL_BUILD_RELEASE)
+	cd kernel/ && $(CARGO) build --target triple/$(KERNEL_TRIPLE).json --lib $(KERNEL_BUILD_RELEASE)
 	ld -T kernel/kernel.ld $< $(RKERNEL_PATH) -o $@
 	
 build/kentry.o: kernel/kentry/kentry.asm kernel/kentry/limine.asm

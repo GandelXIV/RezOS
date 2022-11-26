@@ -78,10 +78,10 @@ impl SegmentDescriptor {
         sd.set_access_S(true); // non-system type -> code / data
         sd.set_access_DC(false); // non conforming to lower rings
         sd.set_access_A(false); // managed by the cpu, left null
-        sd.set_flag_L(false);   // true only for 64 bit code descriptors
+        sd.set_flag_L(false); // true only for 64 bit code descriptors
         sd.set_access_RW(true); // read/write enabled for code/data descriptors
         sd.set_whole_base(0); // all default segments start at 0x0
-        return sd
+        return sd;
     }
 
     const fn new_kernel_code16() -> Self {
@@ -90,7 +90,7 @@ impl SegmentDescriptor {
         sd.set_access_E(true); // executable
         sd.set_flag_G(false);
         sd.set_flag_DB(false); // 16 bit protected mode
-        return sd
+        return sd;
     }
 
     const fn new_kernel_data16() -> Self {
@@ -101,7 +101,7 @@ impl SegmentDescriptor {
         sd.set_flag_DB(false);
         // magic
         sd.set_access_A(true);
-        return sd
+        return sd;
     }
 
     const fn new_kernel_code32() -> Self {
@@ -110,7 +110,7 @@ impl SegmentDescriptor {
         sd.set_access_E(true);
         sd.set_flag_G(true);
         sd.set_flag_DB(true);
-        return sd
+        return sd;
     }
 
     const fn new_kernel_data32() -> Self {
@@ -121,15 +121,15 @@ impl SegmentDescriptor {
         sd.set_flag_DB(true);
         // magic
         sd.set_access_A(true);
-        return sd
+        return sd;
     }
 
-    // limitx & base& are ignored in 64 bit mode because they cover the whole address space   
+    // limitx & base& are ignored in 64 bit mode because they cover the whole address space
     const fn new_kernel_code64() -> Self {
         let mut sd = Self::new_kernel();
         sd.set_access_E(true); // executable
         sd.set_access_RW(true); // allow read, exec enabled by default
-        sd.set_flag_G(false); 
+        sd.set_flag_G(false);
         sd.set_flag_DB(false); // clear since flag_L is enabled
         sd.set_flag_L(true); // long mode 64 bit
         return sd;
@@ -139,10 +139,10 @@ impl SegmentDescriptor {
         let mut sd = Self::new_kernel();
         sd.set_access_E(false); // non-executable (data)
         sd.set_access_RW(true); // allow write, read enabled by default
-        sd.set_flag_G(false); 
-        sd.set_flag_DB(false); 
+        sd.set_flag_G(false);
+        sd.set_flag_DB(false);
         sd.set_flag_L(false); // non-64 bit executable -> data
-        // magic
+                              // magic
         sd.set_access_A(true);
         return sd;
     }
