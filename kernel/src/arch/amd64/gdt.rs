@@ -52,45 +52,76 @@ impl SegmentDescriptor {
     const fn null() -> Self {
         Self(0_u64)
     }
-    
+
+    // TODO: Verify correct endian for _whole_ functions
+
     // addr: u20
-    fn set_whole_limit(&mut self, addr: u32) {
-        self.set_limit0(bin_extract(addr, 15, 0).try_into().unwrap());
-        self.set_limit1(bin_extract(addr, 19, 16).try_into().unwrap());
+    const fn set_whole_limit(&mut self, addr: u32) {
+        self.set_limit0(bin_extract(addr, 15, 0) as u16);
+        self.set_limit1(bin_extract(addr, 19, 16) as u8);
     }
 
-    fn set_whole_base(&mut self, addr: u32) {
+    const fn set_whole_base(&mut self, addr: u32) {
         self.set_base0(bin_extract(addr, 15, 0) as u16);
         self.set_base1(bin_extract(addr, 23, 16) as u8);
         self.set_base2(bin_extract(addr, 31, 24) as u8);
     }
 
+    // base constructor for kernel descriptors
+    const fn new_kernel() -> Self {
+        let mut sd = Self::null();
+        sd.set_access_P(true); // present
+        sd.set_access_DPL(PRIVILEGE_KERNEL);
+        sd.set_access_S(true); // non-system type -> code / data
+        sd.set_access_DC(false); // non conforming to lower rings
+        sd.set_access_A(false); // managed by the cpu, left null
+        sd.set_flag_L(false);   // true only for 64 bit code descriptors
+        sd.set_access_RW(true); // read/write enabled for code/data descriptors
+        sd.set_whole_base(0); // all default segments start at 0x0
+        return sd
+    }
+
     const fn new_kernel_code16() -> Self {
-        todo!()
+        let mut sd = Self::new_kernel();
+        sd.set_whole_limit(0xFFFF);
+        sd.set_access_E(true); // executable
+        sd.set_flag_G(false);
+        sd.set_flag_DB(false); // 16 bit protected mode
+        return sd
     }
 
     const fn new_kernel_data16() -> Self {
-        todo!()
+        let mut sd = Self::new_kernel();
+        sd.set_whole_limit(0xFFFF);
+        sd.set_access_E(false);
+        sd.set_flag_G(false);
+        sd.set_flag_DB(false);
+        return sd
     }
 
     const fn new_kernel_code32() -> Self {
-        todo!()
+        let mut sd = Self::new_kernel();
+        sd.set_whole_limit(1048575);
+        sd.set_access_E(true);
+        sd.set_flag_G(true);
+        sd.set_flag_DB(true);
+        return sd
     }
 
     const fn new_kernel_data32() -> Self {
-        todo!()
+        let mut sd = Self::new_kernel();
+        sd.set_whole_limit(1048575);
+        sd.set_access_E(false);
+        sd.set_flag_G(true);
+        sd.set_flag_DB(true);
+        return sd
     }
 
     // limitx & base& are ignored in 64 bit mode because they cover the whole address space   
     const fn new_kernel_code64() -> Self {
-        let mut sd = Self::null();
-        sd.set_access_P(true); // enabled
-        sd.set_access_DPL(PRIVILEGE_KERNEL); // kernel runs in ring 0
-        sd.set_access_S(true); // non-system because it holds code
+        let mut sd = Self::new_kernel();
         sd.set_access_E(true); // executable
-        sd.set_access_DC(false); // non-conforming to lower ring levels
-        sd.set_access_RW(true); // allow read
-        sd.set_access_A(false); // let 0, the CPU will manage it
+        sd.set_access_RW(true); // allow read, exec enabled by default
         sd.set_flag_G(true); // 4KiB granularity (same as page)
         sd.set_flag_DB(false); // clear since flag_L is enabled
         sd.set_flag_L(true); // long mode 64 bit
@@ -98,14 +129,9 @@ impl SegmentDescriptor {
     }
 
     const fn new_kernel_data64() -> Self {
-        let mut sd = Self::null();
-        sd.set_access_P(true); // enabled
-        sd.set_access_DPL(PRIVILEGE_KERNEL); // kernel runs in ring 0
-        sd.set_access_S(true); // non-system because it holds data
+        let mut sd = Self::new_kernel();
         sd.set_access_E(false); // non-executable (data)
-        sd.set_access_DC(false); // non-conforming to lower ring levels
         sd.set_access_RW(true); // allow write, read enabled by default
-        sd.set_access_A(false); // let 0, the CPU will manage it
         sd.set_flag_G(true); // 4KiB granularity (same as page)
         sd.set_flag_DB(true); // 32 bit address space
         sd.set_flag_L(false); // non-64 bit executable -> data
