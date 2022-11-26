@@ -5,7 +5,7 @@
 // setup: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#x86_64-1
 
 use const_bitfield::bitfield;
-use x86::dtables::{lgdt, DescriptorTablePointer};
+use x86::dtables::{lgdt, sgdt, DescriptorTablePointer};
 #[macro_use]
 use crate::tools::bin_extract;
 
@@ -13,6 +13,7 @@ const PRIVILEGE_KERNEL: u8 = 0;
 const PRIVILEGE_USER: u8 = 3;
 
 static GDT: &[SegmentDescriptor] = &[
+    // this exact structure must be preserved for limine facilities to work
     SegmentDescriptor::null(),
     SegmentDescriptor::new_kernel_code16(),
     SegmentDescriptor::new_kernel_data16(),
@@ -20,9 +21,11 @@ static GDT: &[SegmentDescriptor] = &[
     SegmentDescriptor::new_kernel_data32(),
     SegmentDescriptor::new_kernel_code64(),
     SegmentDescriptor::new_kernel_data64(),
+    // after this anything can be loaded
 ];
 
 bitfield! {
+    #[derive(Debug)]
     struct SegmentDescriptor(u64);
     u16, limit0, set_limit0: 15, 0;
     u16, base0,  set_base0: 31, 16;
@@ -96,6 +99,8 @@ impl SegmentDescriptor {
         sd.set_access_E(false);
         sd.set_flag_G(false);
         sd.set_flag_DB(false);
+        // magic
+        sd.set_access_A(true);
         return sd
     }
 
@@ -114,6 +119,8 @@ impl SegmentDescriptor {
         sd.set_access_E(false);
         sd.set_flag_G(true);
         sd.set_flag_DB(true);
+        // magic
+        sd.set_access_A(true);
         return sd
     }
 
@@ -122,7 +129,7 @@ impl SegmentDescriptor {
         let mut sd = Self::new_kernel();
         sd.set_access_E(true); // executable
         sd.set_access_RW(true); // allow read, exec enabled by default
-        sd.set_flag_G(true); // 4KiB granularity (same as page)
+        sd.set_flag_G(false); 
         sd.set_flag_DB(false); // clear since flag_L is enabled
         sd.set_flag_L(true); // long mode 64 bit
         return sd;
@@ -132,14 +139,16 @@ impl SegmentDescriptor {
         let mut sd = Self::new_kernel();
         sd.set_access_E(false); // non-executable (data)
         sd.set_access_RW(true); // allow write, read enabled by default
-        sd.set_flag_G(true); // 4KiB granularity (same as page)
-        sd.set_flag_DB(true); // 32 bit address space
+        sd.set_flag_G(false); 
+        sd.set_flag_DB(false); 
         sd.set_flag_L(false); // non-64 bit executable -> data
+        // magic
+        sd.set_access_A(true);
         return sd;
     }
 }
 
 pub fn init() {
-    unsafe { x86::dtables::lgdt(&DescriptorTablePointer::new_from_slice(GDT)) };
-    loop {}
+    let gdt = DescriptorTablePointer::new_from_slice(GDT);
+    unsafe { lgdt(&gdt) };
 }

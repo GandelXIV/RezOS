@@ -21,8 +21,12 @@ macro_rules! enum_names {
     };
 }   
 
+// cuts out bits 'higher' to 'lower' from number 'x' as binary
 // TODO: rewrite this using generics
-pub const fn bin_extract(x: u32, start: usize, end: usize) -> u32 {
-    (x >> start) & ( (1 << end) - 1)
+pub const fn bin_extract(x: u32, higher: usize, lower: usize) -> u32 {
+    // (x >> lower) -> cuts out the stuff we dont care about to the right
+    // ( (1 << (higher + 1 - lower)) - 1) -> creates a binary number full of ones with length (higher+1-lower), that then get used as a mask
+    // for bitwise and ('&') to remove all the stuff we dont care about to the left
+    (x >> lower) & ( (1 << (higher + 1 - lower)) - 1)
 }
 
