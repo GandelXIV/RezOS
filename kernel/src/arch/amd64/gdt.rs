@@ -4,10 +4,9 @@
 // TODO: This priple faults because the limine.write() function requires a specific GDT order to be
 // setup: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#x86_64-1
 
-use const_bitfield::bitfield;
 use x86::dtables::{lgdt, sgdt, DescriptorTablePointer};
 #[macro_use]
-use crate::tools::bin_extract;
+use crate::tools::{bin_extract, bin_insert};
 
 const PRIVILEGE_KERNEL: u8 = 0;
 const PRIVILEGE_USER: u8 = 3;
@@ -24,6 +23,11 @@ static GDT: &[SegmentDescriptor] = &[
     // after this anything can be loaded
 ];
 
+/* 
+ * const_bitfield does not work on newer rust versions, but i may maintain it in the future, so i
+ * will just leave the code here for now and provide a verbose implementation of the bit setters
+ * TODO: uncomment this block after stabilising const_bitfield
+use const_bitfield::bitfield;
 bitfield! {
     #[derive(Debug)]
     struct SegmentDescriptor(u64);
@@ -50,8 +54,53 @@ bitfield! {
 
     u8, base2, set_base2: 63, 56;
 }
+*/
+struct SegmentDescriptor(u64);
+
+macro_rules! bitfield {
+    // setters
+    ($name:ident, $typ:ty, $h:literal, $l:literal) => {
+        const fn $name(&mut self, payload: $typ) {
+            *self = Self(bin_insert(self.0, payload, $h, $l));
+        }
+    };
+    
+    ($name:ident, $typ:ty, $b:literal) => {
+        const fn $name(&mut self, payload: $typ) {
+            *self = Self(bin_insert(self.0, payload, $b, $b));
+        }
+    };
+}
 
 impl SegmentDescriptor {
+
+    // TODO: Remove this block after stabilising const_bitfield
+    // TODO: OR rewrite this using a macro
+    // ==== temporary replica of behavior provided by the const_bitfield crate 
+    
+    bitfield!(set_limit0, u16, 15, 0);
+    bitfield!(set_base0, u16, 31, 16);
+    bitfield!(set_base1, u8, 39, 32);
+
+    bitfield!(set_access_A, bool, 40);
+    bitfield!(set_access_RW, bool, 41);
+    bitfield!(set_access_DC, bool, 42);
+    bitfield!(set_access_E, bool, 43);
+    bitfield!(set_access_S, bool, 44);
+    bitfield!(set_access_DPL, u8, 46, 45);
+    bitfield!(set_access_P, bool, 47);
+
+    bitfield!(set_limit1, u8, 51, 48);
+
+    bitfield!(set_reserved, bool, 52); // dont use this
+    bitfield!(set_flag_L, bool, 53);
+    bitfield!(set_flag_DB, bool, 54);
+    bitfield!(set_flag_G, bool, 55);
+
+    bitfield!(set_base2, u8, 63, 56);
+
+    // ==== end of temporary impl
+
     const fn null() -> Self {
         Self(0_u64)
     }

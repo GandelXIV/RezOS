@@ -21,11 +21,27 @@ macro_rules! enum_names {
     };
 }
 
+// NOTE: The following 2 functions do NOT bound check if the payload fits
+
 // cuts out bits 'higher' to 'lower' from number 'x' as binary
-// TODO: rewrite this using generics
-pub const fn bin_extract(x: u32, higher: usize, lower: usize) -> u32 {
+pub const fn bin_extract<T: Into<u64>>(target: T, higher: usize, lower: usize) -> u64 
+where u64: ~const From<T> {
     // (x >> lower) -> cuts out the stuff we dont care about to the right
     // ( (1 << (higher + 1 - lower)) - 1) -> creates a binary number full of ones with length (higher+1-lower), that then get used as a mask
     // for bitwise and ('&') to remove all the stuff we dont care about to the left
-    (x >> lower) & ((1 << (higher + 1 - lower)) - 1)
+    (target.into() >> lower) & ( (1 << (higher + 1 - lower)) - 1)
 }
+
+// inserts a binary sequence into another one
+pub const fn bin_insert<T: Into<u64>, U: Into<u64> > (target: T, payload: U, higher: usize, lower: usize) -> u64 
+where u64: ~const From<U>, u64: ~const From<T> {
+    // this mask enables all bits that have to be with a BitOr
+    let enable = (payload.into() << lower) as u64;
+    // this mask disables all bits that must not be with a BitAnd
+    // same as the enable mask, but full of ones on the left & the right to preserve the rest of
+    // the data, except for our payload that can have some zeroes for disabling
+    let disable = (enable | (((1 as u64) << lower) - 1)) | ( if higher == 63 { 0 } else { u64::MAX << higher + 1});
+    // apply the masks
+    ((target.into() | enable) & disable).into()
+}
+
