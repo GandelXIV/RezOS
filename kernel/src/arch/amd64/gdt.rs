@@ -23,7 +23,7 @@ static GDT: &[SegmentDescriptor] = &[
     // after this anything can be loaded
 ];
 
-/* 
+/*
  * const_bitfield does not work on newer rust versions, but i may maintain it in the future, so i
  * will just leave the code here for now and provide a verbose implementation of the bit setters
  * TODO: uncomment this block after stabilising const_bitfield
@@ -64,7 +64,7 @@ macro_rules! bitfield {
             *self = Self(bin_insert(self.0, payload, $h, $l));
         }
     };
-    
+
     ($name:ident, $typ:ty, $b:literal) => {
         const fn $name(&mut self, payload: $typ) {
             *self = Self(bin_insert(self.0, payload, $b, $b));
@@ -73,11 +73,10 @@ macro_rules! bitfield {
 }
 
 impl SegmentDescriptor {
-
     // TODO: Remove this block after stabilising const_bitfield
     // TODO: OR rewrite this using a macro
-    // ==== temporary replica of behavior provided by the const_bitfield crate 
-    
+    // ==== temporary replica of behavior provided by the const_bitfield crate
+
     bitfield!(set_limit0, u16, 15, 0);
     bitfield!(set_base0, u16, 31, 16);
     bitfield!(set_base1, u8, 39, 32);

@@ -3,11 +3,13 @@
 #![crate_type = "staticlib"]
 #![feature(core_c_str)]
 #![feature(layout_for_ptr)]
-
 // required by tools.rs
 #![feature(const_convert)]
 #![feature(const_trait_impl)]
 #![feature(const_mut_refs)]
+
+// required by panic handler
+#![feature(panic_info_message)]
 
 /*
 // required by const-bitfields
@@ -23,8 +25,24 @@ pub use rlibc;
 pub use rlibcex;
 
 #[panic_handler]
-fn kpanic(_pi: &core::panic::PanicInfo<'_>) -> ! {
-    log!("KERNEL PANIC!!!\n");
+fn kpanic(info: &core::panic::PanicInfo<'_>) -> ! {
+    log!("\nKERNEL PANIC!!!\n");
+    // payload
+    match info.payload().downcast_ref::<&str>() {
+        Some(p) => log!("Payload: {:?}\n", p),
+        None => log!("Payload: unknown\n"),
+    }
+    // message
+    match info.message() {
+        Some(msg) => log!("Message: {:?}\n", msg),
+        None => log!("Message: unknown\n"),
+    }
+    // location
+    match info.location() {
+        Some(loc) => log!("Location: {}\n", loc),
+        None => log!("Location: unknown"),
+    }
+
     loop {}
 }
 
