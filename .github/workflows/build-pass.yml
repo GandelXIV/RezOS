@@ -22,5 +22,5 @@ jobs:
       - name: configure
         run: ./configure.sh 
       - name: Build
-        run: make
+        run: source $HOME/.cargo/env && make
 

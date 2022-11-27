@@ -3,10 +3,18 @@
 #![crate_type = "staticlib"]
 #![feature(core_c_str)]
 #![feature(layout_for_ptr)]
+
+// required by tools.rs
+#![feature(const_convert)]
+#![feature(const_trait_impl)]
+#![feature(const_mut_refs)]
+
+/*
 // required by const-bitfields
 #![feature(const_convert)] // optional, when using from/into conversion
 #![feature(const_mut_refs)] // always required
 #![feature(const_trait_impl)] // always required
+*/
 
 use core::panic::{self, PanicInfo};
 // Do not remove these imports, they prevent link errors

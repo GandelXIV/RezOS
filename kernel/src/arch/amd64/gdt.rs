@@ -4,10 +4,9 @@
 // TODO: This priple faults because the limine.write() function requires a specific GDT order to be
 // setup: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#x86_64-1
 
-use const_bitfield::bitfield;
 use x86::dtables::{lgdt, sgdt, DescriptorTablePointer};
 #[macro_use]
-use crate::tools::bin_extract;
+use crate::tools::{bin_extract, bin_insert};
 
 const PRIVILEGE_KERNEL: u8 = 0;
 const PRIVILEGE_USER: u8 = 3;
@@ -24,6 +23,11 @@ static GDT: &[SegmentDescriptor] = &[
     // after this anything can be loaded
 ];
 
+/* 
+ * const_bitfield does not work on newer rust versions, but i may maintain it in the future, so i
+ * will just leave the code here for now and provide a verbose implementation of the bit setters
+ * TODO: uncomment this block after stabilising const_bitfield
+use const_bitfield::bitfield;
 bitfield! {
     #[derive(Debug)]
     struct SegmentDescriptor(u64);
@@ -50,8 +54,53 @@ bitfield! {
 
     u8, base2, set_base2: 63, 56;
 }
+*/
+struct SegmentDescriptor(u64);
+
+macro_rules! bitfield {
+    // setters
+    ($name:ident, $typ:ty, $h:literal, $l:literal) => {
+        const fn $name(&mut self, payload: $typ) {
+            *self = Self(bin_insert(self.0, payload, $h, $l));
+        }
+    };
+    
+    ($name:ident, $typ:ty, $b:literal) => {
+        const fn $name(&mut self, payload: $typ) {
+            *self = Self(bin_insert(self.0, payload, $b, $b));
+        }
+    };
+}
 
 impl SegmentDescriptor {
+
+    // TODO: Remove this block after stabilising const_bitfield
+    // TODO: OR rewrite this using a macro
+    // ==== temporary replica of behavior provided by the const_bitfield crate 
+    
+    bitfield!(set_limit0, u16, 15, 0);
+    bitfield!(set_base0, u16, 31, 16);
+    bitfield!(set_base1, u8, 39, 32);
+
+    bitfield!(set_access_A, bool, 40);
+    bitfield!(set_access_RW, bool, 41);
+    bitfield!(set_access_DC, bool, 42);
+    bitfield!(set_access_E, bool, 43);
+    bitfield!(set_access_S, bool, 44);
+    bitfield!(set_access_DPL, u8, 46, 45);
+    bitfield!(set_access_P, bool, 47);
+
+    bitfield!(set_limit1, u8, 51, 48);
+
+    bitfield!(set_reserved, bool, 52); // dont use this
+    bitfield!(set_flag_L, bool, 53);
+    bitfield!(set_flag_DB, bool, 54);
+    bitfield!(set_flag_G, bool, 55);
+
+    bitfield!(set_base2, u8, 63, 56);
+
+    // ==== end of temporary impl
+
     const fn null() -> Self {
         Self(0_u64)
     }
@@ -78,10 +127,10 @@ impl SegmentDescriptor {
         sd.set_access_S(true); // non-system type -> code / data
         sd.set_access_DC(false); // non conforming to lower rings
         sd.set_access_A(false); // managed by the cpu, left null
-        sd.set_flag_L(false);   // true only for 64 bit code descriptors
+        sd.set_flag_L(false); // true only for 64 bit code descriptors
         sd.set_access_RW(true); // read/write enabled for code/data descriptors
         sd.set_whole_base(0); // all default segments start at 0x0
-        return sd
+        return sd;
     }
 
     const fn new_kernel_code16() -> Self {
@@ -90,7 +139,7 @@ impl SegmentDescriptor {
         sd.set_access_E(true); // executable
         sd.set_flag_G(false);
         sd.set_flag_DB(false); // 16 bit protected mode
-        return sd
+        return sd;
     }
 
     const fn new_kernel_data16() -> Self {
@@ -101,7 +150,7 @@ impl SegmentDescriptor {
         sd.set_flag_DB(false);
         // magic
         sd.set_access_A(true);
-        return sd
+        return sd;
     }
 
     const fn new_kernel_code32() -> Self {
@@ -110,7 +159,7 @@ impl SegmentDescriptor {
         sd.set_access_E(true);
         sd.set_flag_G(true);
         sd.set_flag_DB(true);
-        return sd
+        return sd;
     }
 
     const fn new_kernel_data32() -> Self {
@@ -121,15 +170,15 @@ impl SegmentDescriptor {
         sd.set_flag_DB(true);
         // magic
         sd.set_access_A(true);
-        return sd
+        return sd;
     }
 
-    // limitx & base& are ignored in 64 bit mode because they cover the whole address space   
+    // limitx & base& are ignored in 64 bit mode because they cover the whole address space
     const fn new_kernel_code64() -> Self {
         let mut sd = Self::new_kernel();
         sd.set_access_E(true); // executable
         sd.set_access_RW(true); // allow read, exec enabled by default
-        sd.set_flag_G(false); 
+        sd.set_flag_G(false);
         sd.set_flag_DB(false); // clear since flag_L is enabled
         sd.set_flag_L(true); // long mode 64 bit
         return sd;
@@ -139,10 +188,10 @@ impl SegmentDescriptor {
         let mut sd = Self::new_kernel();
         sd.set_access_E(false); // non-executable (data)
         sd.set_access_RW(true); // allow write, read enabled by default
-        sd.set_flag_G(false); 
-        sd.set_flag_DB(false); 
+        sd.set_flag_G(false);
+        sd.set_flag_DB(false);
         sd.set_flag_L(false); // non-64 bit executable -> data
-        // magic
+                              // magic
         sd.set_access_A(true);
         return sd;
     }
