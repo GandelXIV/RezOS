@@ -3,6 +3,7 @@
 #![crate_type = "staticlib"]
 #![feature(core_c_str)]
 #![feature(layout_for_ptr)]
+
 // required by tools.rs
 #![feature(const_convert)]
 #![feature(const_trait_impl)]

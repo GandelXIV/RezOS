@@ -197,6 +197,9 @@ impl SegmentDescriptor {
 }
 
 pub fn init() {
+    let mut loaded: DescriptorTablePointer<SegmentDescriptor> = DescriptorTablePointer::default();
+    unsafe { sgdt(&mut loaded) };
+
     let gdt = DescriptorTablePointer::new_from_slice(GDT);
     unsafe { lgdt(&gdt) };
 }

@@ -33,3 +33,6 @@ arrayvec = { version = "0.7.2", default-features = false }
 # None of the limine libs below work
 #limine = "0.1.8"
 #limine-protocol = "0.4.0"
+
+[build.dependencies]
+rustc_version = "0.4.0"
