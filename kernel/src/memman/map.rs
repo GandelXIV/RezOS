@@ -83,6 +83,8 @@ pub enum MemoryMapperError {
     OutOfBound((usize, usize)),        // contains the valid Mapper region
 }
 
+#[derive(Default)] // this is NOT intended to be used outside
+#[derive(Clone)]
 pub struct MapArea {
     region: (usize, usize),
 }

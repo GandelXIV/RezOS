@@ -26,6 +26,7 @@ x86 = "0.50.0"
 x86_64 = "0.14.10"
 lazy_static = { version = "1.4.0",  features = ["spin_no_std"] }
 arrayvec = { version = "0.7.2", default-features = false }
+tinyvec = "1.6.0"
 
 const-bitfield = "0.2.2"
 
