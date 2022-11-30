@@ -35,6 +35,7 @@ where
 }
 
 // inserts a binary sequence into another one
+// WARNING: does not check if 'payload' fits into the range higher<->lower
 pub const fn bin_insert<T: Into<u64>, U: Into<u64>>(
     target: T,
     payload: U,

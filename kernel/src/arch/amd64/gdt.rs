@@ -1,9 +1,6 @@
 // loads the Global Descriptor Table
 // main source: https://wiki.osdev.org/Global_Descriptor_Table
 
-// TODO: This priple faults because the limine.write() function requires a specific GDT order to be
-// setup: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#x86_64-1
-
 use x86::dtables::{lgdt, sgdt, DescriptorTablePointer};
 #[macro_use]
 use crate::tools::{bin_extract, bin_insert};
@@ -23,10 +20,8 @@ static GDT: &[SegmentDescriptor] = &[
     // after this anything can be loaded
 ];
 
-/*
- * const_bitfield does not work on newer rust versions, but i may maintain it in the future, so i
- * will just leave the code here for now and provide a verbose implementation of the bit setters
- * TODO: uncomment this block after stabilising const_bitfield
+/* const_bitfield implementation of SegmentDescriptor
+
 use const_bitfield::bitfield;
 bitfield! {
     #[derive(Debug)]
@@ -55,6 +50,7 @@ bitfield! {
     u8, base2, set_base2: 63, 56;
 }
 */
+
 struct SegmentDescriptor(u64);
 
 macro_rules! bitfield {
@@ -197,6 +193,9 @@ impl SegmentDescriptor {
 }
 
 pub fn init() {
+    let mut loaded: DescriptorTablePointer<SegmentDescriptor> = DescriptorTablePointer::default();
+    unsafe { sgdt(&mut loaded) };
+
     let gdt = DescriptorTablePointer::new_from_slice(GDT);
     unsafe { lgdt(&gdt) };
 }

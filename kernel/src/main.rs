@@ -3,6 +3,7 @@
 #![crate_type = "staticlib"]
 #![feature(core_c_str)]
 #![feature(layout_for_ptr)]
+
 // required by tools.rs
 #![feature(const_convert)]
 #![feature(const_trait_impl)]
@@ -101,8 +102,8 @@ pub extern "C" fn kmain() {
                 }
             }
         }
-        let typ: &str = region.typ.into();
-        log!("{:023} 0x{:016X} - 0x{:016X}\n", typ, start, end);
+        let print_typ: &str = region.typ.into();
+        log!("{:023} 0x{:016X} - 0x{:016X}\n", print_typ, start, end);
     }
 
     /*

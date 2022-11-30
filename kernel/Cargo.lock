@@ -39,6 +39,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
+name = "const-bitfield"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab9b89705dd8240f7b6b3e4e4d7496ef8e5f7a55f3d56f348224bfa462cca42b"
+
+[[package]]
 name = "embedded-graphics"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -75,6 +81,7 @@ name = "kernel"
 version = "0.1.0"
 dependencies = [
  "arrayvec",
+ "const-bitfield",
  "lazy_static",
  "rlibc",
  "rlibcex",
