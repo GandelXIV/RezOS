@@ -102,8 +102,8 @@ pub extern "C" fn kmain() {
                 }
             }
         }
-        let typ: &str = region.typ.into();
-        log!("{:023} 0x{:016X} - 0x{:016X}\n", typ, start, end);
+        let print_typ: &str = region.typ.into();
+        log!("{:023} 0x{:016X} - 0x{:016X}\n", print_typ, start, end);
     }
 
     /*
