@@ -46,15 +46,14 @@ fn kpanic(info: &core::panic::PanicInfo<'_>) -> ! {
     loop {}
 }
 
-use tinyvec::ArrayVec;
-use tinyvec::Array;
-
 mod arch;
 mod limine;
 mod log;
 mod memman;
 mod tools;
-use memman::map::MemoryMapper;
+
+use memman::map::{MemoryMapper, MapArea};
+use tinyvec::ArrayVec;
 
 #[no_mangle]
 pub extern "C" fn kmain() {
@@ -87,7 +86,7 @@ pub extern "C" fn kmain() {
 
     let ram_size = limine::memory_map().last().unwrap().range.1;
     unsafe { memman::map::set_global((0, ram_size)) };
-    let mut map_area_pool = tinyvec::ArrayVec::<[memman::map::MapArea; 32]>::new();  
+    let mut map_area_pool = ArrayVec::<[MapArea; 25]>::new(); 
     map_area_pool.push(memman::map::claim_global((0, 1000)).unwrap());
     for region in limine::memory_map() {
         let (start, end) = region.range;

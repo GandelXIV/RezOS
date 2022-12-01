@@ -21,7 +21,7 @@ macro_rules! enum_names {
     };
 }
 
-// NOTE: The following 2 functions do NOT bound check if the payload fits
+// NOTE: The following 2 functions do NOT bound check the payload fits
 
 // cuts out bits 'higher' to 'lower' from number 'x' as binary
 pub const fn bin_extract<T: Into<u64>>(target: T, higher: usize, lower: usize) -> u64
@@ -61,3 +61,4 @@ where
     // apply the masks
     ((target.into() | enable) & disable).into()
 }
+
