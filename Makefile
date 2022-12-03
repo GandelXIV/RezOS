@@ -7,7 +7,7 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 
 MAKEFILE2GRAPH = makefile2graph/make2graph
 LIMINE_BIN = limine/bin/
-RKERNEL_SRC = $(wildcard kernel/* kernel/src/* kernel/src/memman/* kernel/src/arch/* kernel/src/arch/arch_x86_64/* kernel/.cargo/* kernel/triple/*) 
+RKERNEL_SRC = $(wildcard kernel/* kernel/src/* kernel/src/memman/* kernel/src/arch/* kernel/src/arch/amd64/* kernel/.cargo/* kernel/triple/*) 
 
 ############ OPTIONS
 

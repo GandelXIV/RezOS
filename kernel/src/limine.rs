@@ -76,6 +76,36 @@ pub fn print_dec(mut n: usize) {
     ((access).write)(access.get_terminal(), &x, x.len());
 }
 
+// macro that completes a request and response struct with all the defaults:
+// https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#features
+
+macro_rules! limine_feature {
+    (
+        struct $request:ident {
+            $($req_field_key:ident : $req_field_type:ty,)*
+        }
+        
+        struct $response:ident {
+            $($res_field_key:ident : $res_field_type:ty,)*
+        }
+    ) => {
+        #[repr(C)]
+        struct $request {
+            id: [u64; 4],
+            revision: u64,
+            response: Ptr<$response>,
+            $($req_field_key : $req_field_type,)*
+        }
+
+        #[repr(C)]
+        #[derive(Clone)]
+        struct $response {
+            revision: u64,
+            $($res_field_key : $res_field_type,)*
+        }
+    };
+}
+
 // ======= Boot Info feature
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-feature
 
@@ -90,18 +120,13 @@ pub fn bootloader_info() -> (&'static [u8], &'static [u8]) {
     )
 }
 
-#[repr(C)]
-struct RequestBootInfo {
-    id: [u64; 4],
-    revision: u64,
-    response: Ptr<ResponseBootInfo>,
-}
+limine_feature! {
+    struct RequestBootInfo{}
 
-#[repr(C)]
-pub struct ResponseBootInfo {
-    revision: u64,
-    pub name: *const u8,
-    pub version: *const u8,
+    struct ResponseBootInfo {
+        name: *const u8,
+        version: *const u8,
+    }
 }
 
 // ======= Memory Map feature
@@ -109,20 +134,14 @@ pub struct ResponseBootInfo {
 
 // private
 
-#[repr(C)]
-struct RequestMemoryMap {
-    id: [u64; 4],
-    revision: u64,
-    response: Ptr<ResponseMemoryMap>,
-}
-
-#[derive(Clone)]
-#[repr(C)]
-struct ResponseMemoryMap {
-    revision: u64,
-    entry_count: u64,
-    // has length of entry_count
-    entries: Ptr<Ptr<MemoryMapEntry>>,
+limine_feature! {
+    struct RequestMemoryMap {}
+    
+    struct ResponseMemoryMap {
+        entry_count: u64,
+        // has length of entry_count
+        entries: Ptr<Ptr<MemoryMapEntry>>,
+    }
 }
 
 #[repr(C)]
@@ -229,17 +248,12 @@ pub struct MemmapItem {
 // ======= Boot Time feature
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#boot-time-feature
 
-#[repr(C)]
-struct RequestBootTime {
-    id: [u64; 4],
-    revision: u64,
-    response: *const ResponseBootTime,
-}
+limine_feature! {
+    struct RequestBootTime{}
 
-#[repr(C)]
-struct ResponseBootTime {
-    revision: u64,
-    time: i64,
+    struct ResponseBootTime {
+        time: i64,
+    }
 }
 
 pub struct Time {
@@ -263,18 +277,13 @@ pub fn boot_time_stamp() -> i64 {
 // ======= Kernel Address feature
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#kernel-address-feature
 
-#[repr(C)]
-struct RequestKernelAddress {
-    id: [u64; 4],
-    revision: u64,
-    response: *const ResponseKernelAddress,
-}
+limine_feature! {
+    struct RequestKernelAddress {}
 
-#[repr(C)]
-struct ResponseKernelAddress {
-    revision: u64,
-    physical_base: u64,
-    virtual_base: u64,
+    struct ResponseKernelAddress {
+        physical_base: u64,
+        virtual_base: u64,
+    }
 }
 
 pub fn kernel_address_physical() -> usize {
@@ -288,17 +297,12 @@ pub fn kernel_address_virtual() -> usize {
 // ======= HHDM (higher half direct map) feature
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#hhdm-higher-half-direct-map-feature
 
-#[repr(C)]
-struct RequestHHDM {
-    id: [u64; 4],
-    revision: u64,
-    response: *const ResponseHHDM,
-}
+limine_feature! {
+    struct RequestHHDM {}
 
-#[repr(C)]
-struct ResponseHHDM {
-    revision: u64,
-    offset: u64, // virtual address of the beginning of the HHDM (higher half direct map)
+    struct ResponseHHDM {
+        offset: u64,
+    }
 }
 
 pub fn hhdm() -> usize {
@@ -308,17 +312,12 @@ pub fn hhdm() -> usize {
 // ======= Stack Size feature
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#stack-size-feature
 
-#[repr(C)]
-struct RequestStackSize {
-    id: [u64; 4],
-    revision: u64,
-    response: *const ResponseStackSize,
-    size: u64,
-}
+limine_feature! {
+    struct RequestStackSize {
+        size: u64,
+    }
 
-#[repr(C)]
-struct ResponseStackSize {
-    revision: u64,
+    struct ResponseStackSize {}
 }
 
 // ======= Terminal feature
@@ -353,20 +352,16 @@ impl TerminalWriter {
     }
 }
 
-#[repr(C)]
-struct RequestTerminal {
-    id: [u64; 4],
-    revision: u64,
-    response: Ptr<ResponseTerminal>,
-    callback: TerminalCallbackFunction,
-}
+limine_feature! {
+    struct RequestTerminal {
+        callback: TerminalCallbackFunction,
+    }
 
-#[repr(C)]
-struct ResponseTerminal {
-    revision: u64,
-    terminal_count: u64,
-    terminals: Ptr<Ptr<Terminal>>,
-    write: TerminalWriteFunction,
+    struct ResponseTerminal {
+        terminal_count: u64,
+        terminals: Ptr<Ptr<Terminal>>,
+        write: TerminalWriteFunction,
+    }
 }
 
 #[repr(C)]
