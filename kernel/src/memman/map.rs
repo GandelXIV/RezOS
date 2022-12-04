@@ -83,9 +83,8 @@ pub enum MemoryMapperError {
     OutOfBound((usize, usize)),        // contains the valid Mapper region
 }
 
-// WARNING: these traits are not meant to be used only tinyvec::ArrayVec 
-#[derive(Clone)]
-#[derive(Default)]
+// WARNING: these traits are not meant to be used only tinyvec::ArrayVec
+#[derive(Clone, Default)]
 pub struct MapArea {
     region: (usize, usize),
 }
@@ -124,8 +123,8 @@ impl Drop for MapArea {
     // permanently its not much  of an issue, but otherwise it forces the use of the unsafe force_free
     fn drop(&mut self) {
         // default Self is not valid
-        if self.region == (0, 0)  {
-            return 
+        if self.region == (0, 0) {
+            return;
         }
         log!(
             "[WARNING] Dropping MapArea handle for region {:016X} - {:016X}!\n",

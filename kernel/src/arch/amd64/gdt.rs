@@ -69,10 +69,7 @@ macro_rules! bitfield {
 }
 
 impl SegmentDescriptor {
-    // TODO: Remove this block after stabilising const_bitfield
-    // TODO: OR rewrite this using a macro
-    // ==== temporary replica of behavior provided by the const_bitfield crate
-
+    // bit write & readers
     bitfield!(set_limit0, u16, 15, 0);
     bitfield!(set_base0, u16, 31, 16);
     bitfield!(set_base1, u8, 39, 32);
@@ -99,8 +96,6 @@ impl SegmentDescriptor {
     const fn null() -> Self {
         Self(0_u64)
     }
-
-    // TODO: Verify correct endian for _whole_ functions
 
     // addr: u20
     const fn set_whole_limit(&mut self, addr: u32) {

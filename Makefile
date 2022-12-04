@@ -85,7 +85,7 @@ $(MAKEFILE2GRAPH):
 
 .PHONY: run clean deep-clean
 
-RUN_ARGS = -D log/qemu.log -m 8G -cdrom 
+RUN_ARGS = -D log/qemu.log -cdrom 
 
 run: build/RezOS.iso
 	qemu-system-x86_64 $(RUN_ARGS) $^ $(QEMU_ARGS)

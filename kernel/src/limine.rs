@@ -7,10 +7,6 @@ use core::iter::Iterator;
 use lazy_static::lazy_static;
 use spin::Mutex;
 
-// first two items in .id of all requests must be equal to the following magic
-// TODO: check this in init() for all requests
-const MAGIC_COMMON: (u64, u64) = (0xc7b1dd30df4c8b88, 0x0a82e883a194f07b);
-
 // simple pointer wrappers that can be replaced in the future for something like NonNull<T>
 type Ptr<T> = *const T;
 type MutPtr<T> = *mut T;
@@ -84,7 +80,7 @@ macro_rules! limine_feature {
         struct $request:ident {
             $($req_field_key:ident : $req_field_type:ty,)*
         }
-        
+
         struct $response:ident {
             $($res_field_key:ident : $res_field_type:ty,)*
         }
@@ -136,7 +132,7 @@ limine_feature! {
 
 limine_feature! {
     struct RequestMemoryMap {}
-    
+
     struct ResponseMemoryMap {
         entry_count: u64,
         // has length of entry_count

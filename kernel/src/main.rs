@@ -2,12 +2,10 @@
 #![no_main]
 #![crate_type = "staticlib"]
 #![feature(layout_for_ptr)]
-
 // required by tools.rs
 #![feature(const_convert)]
 #![feature(const_trait_impl)]
 #![feature(const_mut_refs)]
-
 // required by panic handler
 #![feature(panic_info_message)]
 
@@ -52,7 +50,7 @@ mod log;
 mod memman;
 mod tools;
 
-use memman::map::{MemoryMapper, MapArea};
+use memman::map::{MapArea, MemoryMapper};
 use tinyvec::ArrayVec;
 
 #[no_mangle]
@@ -86,7 +84,7 @@ pub extern "C" fn kmain() {
 
     let ram_size = limine::memory_map().last().unwrap().range.1;
     unsafe { memman::map::set_global((0, ram_size)) };
-    let mut map_area_pool = ArrayVec::<[MapArea; 25]>::new(); 
+    let mut map_area_pool = ArrayVec::<[MapArea; 25]>::new();
     map_area_pool.push(memman::map::claim_global((0, 1000)).unwrap());
     for region in limine::memory_map() {
         let (start, end) = region.range;
@@ -95,7 +93,7 @@ pub extern "C" fn kmain() {
             _ => {
                 let ma = memman::map::claim_global(region.range)
                     .expect("Limine map entry could not be claimed!");
-                if let Some( _ ) = map_area_pool.try_push(ma) {
+                if let Some(_) = map_area_pool.try_push(ma) {
                     log!("[ERROR] map_area_pool is full, limine entry will be dropped!\n");
                 }
             }
@@ -103,7 +101,7 @@ pub extern "C" fn kmain() {
         let print_typ: &str = region.typ.into();
         log!("{:023} 0x{:016X} - 0x{:016X}\n", print_typ, start, end);
     }
-    
+
     /*
     // log GLOBAL_MEMORY_MAPPER entries
     use memman::map::MemoryMapper;
