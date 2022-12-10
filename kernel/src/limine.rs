@@ -187,7 +187,7 @@ impl TryFrom<u64> for MemmapEntryType {
     }
 }
 
-// outdated function
+/* outdated function
 impl Into<&'static [u8]> for MemmapEntryType {
     fn into(self) -> &'static [u8] {
         match self {
@@ -201,7 +201,7 @@ impl Into<&'static [u8]> for MemmapEntryType {
             MemmapEntryType::MemmapFramebuffer => b"Memmap Framebuffer  ",
         }
     }
-}
+}*/
 
 // extern interface function used by the rest of the kernel
 pub fn memory_map() -> MemoryMap {
