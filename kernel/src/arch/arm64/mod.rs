@@ -4,16 +4,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+use super::ArchType;
 
-pub enum ArchType {
-    X86_64,
-    AArch64,
+#[inline]
+pub const fn get_arch() -> ArchType {
+    ArchType::AArch64
 }
 
-mod amd64;
-#[cfg(target_arch = "x86_64")]
-pub use amd64::*;
+pub fn init() {
 
-mod arm64;
-#[cfg(target_arch = "aarch64")]
-pub use arm64::*;
+}
