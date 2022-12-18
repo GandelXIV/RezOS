@@ -5,7 +5,7 @@
 section .text
 
 ; included into .text to not get optimised out
-%include "kernel/kentry/limine.asm"
+%include "kernel/kentry/x86_64/limine.asm"
 
 extern kmain
 global _start

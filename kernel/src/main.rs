@@ -71,8 +71,8 @@ pub extern "C" fn kmain() {
     // arch
     log!("CPU Architecture: ");
     match arch::get_arch() {
-        arch::ArchType::X86_64 => log!("x86_64\n"),
-        arch::ArchType::Arm64 => log!("Arm64/AArch64\n"),
+        arch::ArchType::X86_64 => log!("amd64/x86_64\n"),
+        arch::ArchType::AArch64 => log!("arm64/AArch64\n"),
     };
     arch::init();
 

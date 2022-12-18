@@ -1,84 +1,112 @@
-############ DEFS
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+############ OPTIONS
+
+# either yes|empty
+KERNEL_BUILD_RELEASE ?=
+
+# cargo command
+CARGO ?= cargo
+
+# path to make2graph executable
+PATH_MAKEFILE2GRAPH ?= makefile2graph/make2graph
+
+# path to limine generated binaries
+PATH_LIMINE_BIN ?= limine/bin/
+
+############ GENERICS
+
+RKERNEL_SRC = kernel/Cargo* \
+							kernel/kernel.ld \
+							kernel/rust-toolchain \
+							kernel/src/* \
+							kernel/src/memman/* \
+							kernel/src/arch/* \
+							kernel/.cargo/* \
 
 # https://stackoverflow.com/questions/2483182/recursive-wildcards-in-gnu-make
 rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 
-############ PATHS
+# 1 = isoroot dir
+# 2 = output filename
+define generate_iso_image_base
+	xorriso -as mkisofs -b limine-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table --efi-boot limine-cd-efi.bin -efi-boot-part --efi-boot-image $(1) -o $(2)
+endef
 
-MAKEFILE2GRAPH = makefile2graph/make2graph
-LIMINE_BIN = limine/bin/
-RKERNEL_SRC = $(wildcard kernel/* kernel/src/* kernel/src/memman/* kernel/src/arch/* kernel/src/arch/amd64/* kernel/.cargo/* kernel/triple/*) 
+# 1 = limine configure features
+define compile_limine_base
+	cd limine && ./bootstrap
+	cd limine && ./configure $(1)
+	make -C limine
+endef
 
-############ OPTIONS
+# 1 = triple/target
+# 2 = linked dependencies
+# 3 = output filename
+define compile_kernel
+	cd kernel/ && $(CARGO) build --target triple/$(1).json --lib $(if $(KERNEL_BUILD_RELEASE), --release, )
+	ld -T kernel/kernel.ld -o $(3) $(2) $(if $(KERNEL_BUILD_RELEASE), kernel/target/$(1)/release/libkernel.a, kernel/target/$(1)/debug/libkernel.a)
+endef
 
-# either on/off
-KERNEL_BUILD_WITH_RELEASE ?= off 
-# only x86_64 for now
-KERNEL_TRIPLE 	     ?= x86_64
+# 1 = destination
+# 2 = source
+define link
+$(1): $(2)
+	ln -f $(2) $(1)
+endef
 
-# can be set to another path
-CARGO ?= cargo
+############ x86_64 RECIEPES
 
-############ CONDITIONS
+RKERNEL_SRC_x86_64 = $(RKERNEL_SRC) kernel/src/arch/amd64/* kernel/triple/x86_64.json
 
-ifeq ($(KERNEL_BUILD_WITH_RELEASE), on) 
-	RKERNEL_PATH = kernel/target/$(KERNEL_TRIPLE)/release/libkernel.a 
-	KERNEL_BUILD_RELEASE = '--release'
-else
-	RKERNEL_PATH = kernel/target/$(KERNEL_TRIPLE)/debug/libkernel.a
-	KERNEL_BUILD_RELEASE =
-endif
-
-############ RECIEPE
+LIMINE_ARTIFACTS_x86_64 = $(PATH_LIMINE_BIN)/limine-deploy \
+													$(PATH_LIMINE_BIN)/limine.sys \
+													$(PATH_LIMINE_BIN)/limine-cd-efi.bin \
+													$(PATH_LIMINE_BIN)/limine-cd.bin
 
 # these dependencies get copied on the boot partition
-ISODEPS = isoroot/kernel.bin isoroot/limine-cd.bin isoroot/limine-cd-efi.bin isoroot/limine.sys isoroot/limine.cfg build/limine-deploy  
+ISODEPS_x86_64 = build/isoroot_x86_64/kernel.bin \
+								 build/isoroot_x86_64/limine-cd.bin \
+								 build/isoroot_x86_64/limine-cd-efi.bin \
+								 build/isoroot_x86_64/limine.sys \
+								 build/isoroot_x86_64/limine.cfg 
 
 # main
-build/RezOS.iso: scripts/mk/mkiso.sh $(ISODEPS) Makefile
-	$< $@
+build/RezOS-x86_64.iso: $(ISODEPS_x86_64) build/limine-deploy
+	$(call generate_iso_image_base, build/isoroot_x86_64/, $@)
+	build/limine-deploy $@
 	@echo "Done!"
 
-isodeps: $(ISODEPS)
-	echo "Build all required dependencies!"
+$(eval $(call link, build/isoroot_x86_64/kernel.bin, 				build/kernel.x86_64.bin ))
+$(eval $(call link, build/isoroot_x86_64/limine.cfg, 				kernel/limine.cfg ))
+$(eval $(call link, build/isoroot_x86_64/limine-cd.bin, 		$(PATH_LIMINE_BIN)/limine-cd.bin ))
+$(eval $(call link, build/isoroot_x86_64/limine-cd-efi.bin, $(PATH_LIMINE_BIN)/limine-cd-efi.bin ))
+$(eval $(call link, build/isoroot_x86_64/limine.sys, 				$(PATH_LIMINE_BIN)/limine.sys ))
+$(eval $(call link, build/limine-deploy, 										$(PATH_LIMINE_BIN)/limine-deploy ))
 
-isoroot/kernel.bin: build/kernel.bin
-	ln -f $< $@
-
-isoroot/limine-cd.bin: $(LIMINE_BIN)/limine-cd.bin
-	ln -f $< $@
-
-isoroot/limine-cd-efi.bin: $(LIMINE_BIN)/limine-cd-efi.bin 
-	ln -f $< $@
-
-isoroot/limine.sys: $(LIMINE_BIN)/limine.sys 
-	ln -f $< $@
-
-isoroot/limine.cfg: kernel/limine.cfg 
-	ln -f $< $@
-
-build/limine-deploy: $(LIMINE_BIN)/limine-deploy 
-	ln -f $< $@
-
-$(LIMINE_BIN)/limine-deploy $(LIMINE_BIN)/limine.sys $(LIMINE_BIN)/limine-cd-efi.bin $(LIMINE_BIN)/limine-cd.bin: $(call rwildcard limine/*)
-	cd limine && ./bootstrap
-	cd limine && ./configure --enable-bios-cd --enable-uefi-cd
-	make -C limine
+$(LIMINE_ARTIFACTS_x86_64): $(call rwildcard limine/*)
+	$(call compile_limine_base, --enable-uefi-cd --enable-bios-cd)
 	make -C limine limine-deploy
 
 # the kernel itself compiles to a static library that gets linked to kentry.asm which holds the entry point and some additional structures and functions (such as limine requests)
-build/kernel.bin: build/kentry.o $(RKERNEL_SRC)	
-	cd kernel/ && $(CARGO) build --target triple/$(KERNEL_TRIPLE).json --lib $(KERNEL_BUILD_RELEASE)
-	ld -T kernel/kernel.ld $< $(RKERNEL_PATH) -o $@
+build/kernel.x86_64.bin: build/kentry.x86_64.o $(RKERNEL_SRC_x86_64)
+	$(call compile_kernel,x86_64, $<, $@)
 	
-build/kentry.o: kernel/kentry/kentry.asm kernel/kentry/limine.asm
-	nasm -f elf64 $< -o $@
+build/kentry.x86_64.o: kernel/kentry/x86_64/*
+	nasm -f elf64 kernel/kentry/x86_64/kentry.asm -o $@
+
+isodeps_x86_64: $(ISODEPS_x86_64)
+	echo "Built all required dependencies!"
+
+############ COMMON RECIEPES
 
 # visual representation of the build process
-log/buildflow.png: $(MAKEFILE2GRAPH) Makefile
-	make -Bnd | $(MAKEFILE2GRAPH) -r | dot -Tpng -o $@
+log/buildflow.png: $(PATH_MAKEFILE2GRAPH) Makefile
+	make -Bnd | $(PATH_MAKEFILE2GRAPH) -r | dot -Tpng -o $@
 
-$(MAKEFILE2GRAPH):
+$(PATH_MAKEFILE2GRAPH):
 	cd makefile2graph && make
 
 ############ PHONY (commands, non file targets)
@@ -87,18 +115,17 @@ $(MAKEFILE2GRAPH):
 
 RUN_ARGS = -D log/qemu.log -cdrom 
 
-run: build/RezOS.iso
+all: build/RezOS-x86_64.iso log/buildflow.png
+	@echo "Done all jobs!"
+
+run-x86_64: build/RezOS.iso
 	qemu-system-x86_64 $(RUN_ARGS) $^ $(QEMU_ARGS)
 
-run-spice: build/RezOS.iso
-	qemu-system-x86_64 $(RUN_ARGS) $^ -display spice-app $(QEMU_ARGS)
-
 clean:
-	rm -f build/*
-	rm -f isoroot/*
+	find build/ -type f -delete
 	rm -f log/*
 
 deep-clean: clean
 	rm -rf kernel/target/*
-	rm -f  $(MAKEFILE2GRAPH)
+	rm -f $(PATH_MAKEFILE2GRAPH)
 	rm -f limine/bin/*
