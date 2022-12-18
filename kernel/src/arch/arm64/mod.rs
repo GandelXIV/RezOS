@@ -11,6 +11,4 @@ pub const fn get_arch() -> ArchType {
     ArchType::AArch64
 }
 
-pub fn init() {
-
-}
+pub fn init() {}

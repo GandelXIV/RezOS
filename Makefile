@@ -118,7 +118,7 @@ RUN_ARGS = -D log/qemu.log -cdrom
 all: build/RezOS-x86_64.iso log/buildflow.png
 	@echo "Done all jobs!"
 
-run-x86_64: build/RezOS.iso
+run-x86_64: build/RezOS-x86_64.iso
 	qemu-system-x86_64 $(RUN_ARGS) $^ $(QEMU_ARGS)
 
 clean:
