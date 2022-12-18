@@ -16,14 +16,16 @@ crate-type = ["staticlib"]
 name = "kernel"
 path = "src/main.rs"
 
+[target.'cfg(target_arch = "x86_64")'.dependencies]
+x86 = "0.50.0"
+x86_64 = "0.14.10"
+
 [dependencies]
 rlibc = "1.0.0"
 rlibcex = "0.1"
 tinybmp = "0.3.3"
 volatile = "0.4.5"
 spin = "0.9.3"
-x86 = "0.50.0"
-x86_64 = "0.14.10"
 lazy_static = { version = "1.4.0",  features = ["spin_no_std"] }
 arrayvec = { version = "0.7.2", default-features = false }
 tinyvec = "1.6.0"

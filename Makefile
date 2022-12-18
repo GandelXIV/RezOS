@@ -11,15 +11,18 @@ RKERNEL_SRC = $(wildcard kernel/* kernel/src/* kernel/src/memman/* kernel/src/ar
 
 ############ OPTIONS
 
+# either x86_64 | aarch64
+TARGET_ARCH ?= x86_64
+
 # either on/off
 KERNEL_BUILD_WITH_RELEASE ?= off 
-# only x86_64 for now
-KERNEL_TRIPLE 	     ?= x86_64
 
 # can be set to another path
 CARGO ?= cargo
 
 ############ CONDITIONS
+
+KERNEL_TRIPLE = $(TARGET_ARCH)
 
 ifeq ($(KERNEL_BUILD_WITH_RELEASE), on) 
 	RKERNEL_PATH = kernel/target/$(KERNEL_TRIPLE)/release/libkernel.a 
@@ -29,18 +32,28 @@ else
 	KERNEL_BUILD_RELEASE =
 endif
 
+
+ifeq ($(TARGET_ARCH), x86_64)
+	LIMINE_CONFIGURE_FEATURES = --enable-uefi-cd --enable-bios-cd
+endif
+
+ifeq ($(TARGET_ARCH), aarch64)
+	LIMINE_CONFIGURE_FEATURES = --enable-uefi-aarch64
+endif
+
+
 ############ RECIEPE
 
 # these dependencies get copied on the boot partition
 ISODEPS = isoroot/kernel.bin isoroot/limine-cd.bin isoroot/limine-cd-efi.bin isoroot/limine.sys isoroot/limine.cfg build/limine-deploy  
 
 # main
-build/RezOS.iso: scripts/mk/mkiso.sh $(ISODEPS) Makefile
+build/RezOS.iso: scripts/mk/mkiso.sh $(ISODEPS)
 	$< $@
 	@echo "Done!"
 
 isodeps: $(ISODEPS)
-	echo "Build all required dependencies!"
+	echo "Built all required dependencies!"
 
 isoroot/kernel.bin: build/kernel.bin
 	ln -f $< $@
@@ -62,7 +75,7 @@ build/limine-deploy: $(LIMINE_BIN)/limine-deploy
 
 $(LIMINE_BIN)/limine-deploy $(LIMINE_BIN)/limine.sys $(LIMINE_BIN)/limine-cd-efi.bin $(LIMINE_BIN)/limine-cd.bin: $(call rwildcard limine/*)
 	cd limine && ./bootstrap
-	cd limine && ./configure --enable-bios-cd --enable-uefi-cd
+	cd limine && ./configure $(LIMINE_CONFIGURE_FEATURES)
 	make -C limine
 	make -C limine limine-deploy
 
