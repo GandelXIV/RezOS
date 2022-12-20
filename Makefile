@@ -99,6 +99,10 @@ build/kentry.x86_64.o: kernel/kentry/x86_64/*
 
 isodeps_x86_64: $(ISODEPS_x86_64)
 	echo "Built all required dependencies!"
+############ aarch64 RECIEPES
+
+build/kentry.aarch64.o: kernel/kentry/aarch64/*
+	aarch64-linux-gnu-as kernel/kentry/aarch64/kentry.S -o $@
 
 ############ COMMON RECIEPES
 
