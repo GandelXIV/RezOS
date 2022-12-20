@@ -38,6 +38,7 @@ endef
 # 1 = limine configure features
 define compile_limine_base
 	cd limine && ./bootstrap
+	cd limine && make distclean || true
 	cd limine && ./configure $(1)
 	make -C limine
 endef
@@ -134,6 +135,7 @@ deep-clean: clean clean-limine
 	rm -f $(PATH_MAKEFILE2GRAPH)
 
 clean-limine:
+	cd limine && make distclean
 	rm -f limine/bin/*
 	rm -f limine/cross-files/config.log
 	rm -f limine/cross-files/config.status
