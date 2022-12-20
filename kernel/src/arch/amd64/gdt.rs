@@ -10,6 +10,7 @@
 use x86::dtables::{lgdt, sgdt, DescriptorTablePointer};
 #[macro_use]
 use crate::tools::{bin_extract, bin_insert};
+use crate::bitfield;
 
 const PRIVILEGE_KERNEL: u8 = 0;
 const PRIVILEGE_USER: u8 = 3;
@@ -59,20 +60,7 @@ bitfield! {
 
 struct SegmentDescriptor(u64);
 
-macro_rules! bitfield {
-    // setters
-    ($name:ident, $typ:ty, $h:literal, $l:literal) => {
-        const fn $name(&mut self, payload: $typ) {
-            *self = Self(bin_insert(self.0, payload, $h, $l));
-        }
-    };
 
-    ($name:ident, $typ:ty, $b:literal) => {
-        const fn $name(&mut self, payload: $typ) {
-            *self = Self(bin_insert(self.0, payload, $b, $b));
-        }
-    };
-}
 
 impl SegmentDescriptor {
     // bit write & readers

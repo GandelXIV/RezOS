@@ -1,5 +1,6 @@
 # Package Dependencies Explained
 
+- git      - cloning required repos
 - curl     - used to install rust <br>
 - make     - base build system, required <br>
 - nasm     - assembler, required <br>
@@ -14,4 +15,4 @@
 ## limine aarch64 dependencies
 - llvm <br>
 - lld <br>
-
+- gcc-aarch64-linux-gnu <br>

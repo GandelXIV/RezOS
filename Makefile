@@ -4,8 +4,8 @@
 
 ############ OPTIONS
 
-# either yes|empty
-KERNEL_BUILD_RELEASE ?=
+# compilers the rust kernel code with the --release flag
+KERNEL_BUILD_RELEASE ?= # either yes|empty
 
 # cargo command
 CARGO ?= cargo
@@ -129,7 +129,12 @@ clean:
 	find build/ -type f -delete
 	rm -f log/*
 
-deep-clean: clean
+deep-clean: clean clean-limine
 	rm -rf kernel/target/*
 	rm -f $(PATH_MAKEFILE2GRAPH)
+
+clean-limine:
 	rm -f limine/bin/*
+	rm -f limine/cross-files/config.log
+	rm -f limine/cross-files/config.status
+	rm -f limine/cross-files/i686-toolchain.mk
