@@ -4,8 +4,8 @@
 
 ############ OPTIONS
 
-# either yes|empty
-KERNEL_BUILD_RELEASE ?=
+# compilers the rust kernel code with the --release flag
+KERNEL_BUILD_RELEASE ?= # either yes|empty
 
 # cargo command
 CARGO ?= cargo
@@ -38,6 +38,7 @@ endef
 # 1 = limine configure features
 define compile_limine_base
 	cd limine && ./bootstrap
+	cd limine && make distclean || true
 	cd limine && ./configure $(1)
 	make -C limine
 endef
@@ -99,6 +100,10 @@ build/kentry.x86_64.o: kernel/kentry/x86_64/*
 
 isodeps_x86_64: $(ISODEPS_x86_64)
 	echo "Built all required dependencies!"
+############ aarch64 RECIEPES
+
+build/kentry.aarch64.o: kernel/kentry/aarch64/*
+	aarch64-linux-gnu-as kernel/kentry/aarch64/kentry.S -o $@
 
 ############ COMMON RECIEPES
 
@@ -125,7 +130,13 @@ clean:
 	find build/ -type f -delete
 	rm -f log/*
 
-deep-clean: clean
+deep-clean: clean clean-limine
 	rm -rf kernel/target/*
 	rm -f $(PATH_MAKEFILE2GRAPH)
+
+clean-limine:
+	cd limine && make distclean
 	rm -f limine/bin/*
+	rm -f limine/cross-files/config.log
+	rm -f limine/cross-files/config.status
+	rm -f limine/cross-files/i686-toolchain.mk

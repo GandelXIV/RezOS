@@ -25,6 +25,31 @@ macro_rules! enum_names {
     };
 }
 
+// use in an impl block, will create functions to interact with ranges of the raw binary represenation of the type
+// Example usage:
+/*
+    impl u64 {
+        bitfield!(set_half, u32, 31, 0); // creates a set_half() function that takes an u32 and writes to bits 0..31 of the u64
+        bitfield!(set_flag, bool, 60); // creates a set_flag() function that takes a bool and writes to bit 60 of the u64
+    }
+*/
+#[macro_export]
+#[macro_use]
+macro_rules! bitfield {
+    // setters
+    ($name:ident, $typ:ty, $h:literal, $l:literal) => {
+        const fn $name(&mut self, payload: $typ) {
+            *self = Self(bin_insert(self.0, payload, $h, $l));
+        }
+    };
+
+    ($name:ident, $typ:ty, $b:literal) => {
+        const fn $name(&mut self, payload: $typ) {
+            *self = Self(bin_insert(self.0, payload, $b, $b));
+        }
+    };
+}
+
 // NOTE: The following 2 functions do NOT bound check the payload fits
 
 // cuts out bits 'higher' to 'lower' from number 'x' as binary

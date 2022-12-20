@@ -11,22 +11,28 @@ A modern operating system written in the rust programming language.
 - Running DOOM
 - Full network & graphics stack
 
-# Setup
-Note: This guide assumes you do this on linux. <br>
-Follow these steps: <br>
+# Setup instructions
+## A. download the source code
 1. Clone the source repository <br>
 `git clone https://www.github.com/GandelXIV/RezOS.git`
 2. Update git submodules <br>
 `git submodule update --init --progress`
-3. Install build dependencies <br>
-  There are two ways to do this:
-  - Using an install script located in `scripts/install/all/{your-distro}.sh`. <br> Note that currently only Arch and Mint(Ubuntu) are supported. <br>
-    If you have a different distro you can still use `scripts/install/rust-linux.sh` to setup rust, then continue with the following step to install the rest.
-  - Install manually as described in `scripts/install/packages/packages.md` and `scripts/install/rust-linux.sh`.
-4. Configure either manually(Docs to be added) or via: <br>
+## B. Prepare the environment
+1. Configure the project as described in
 `./configure.sh`
-5. Build with make <br>
-`make`
-6. Run/debug in emulator <br>
-`make run`
-
+2. Install dependencies, there are 2 ways of doing this:
+### Locally
+  This option is only viable on linux, so if you are on a different platform consider using the Docker method. <br> <br>
+  Use an install script located in `scripts/install/all/{your-distro}.sh`. <br> 
+  If your distro does not have a script, you can still use `scripts/install/rust-linux.sh` to setup rust, then install all the packages in `scripts/install/packages/packages.md` manually
+###
+### Inside Docker
+  This option is cross-platform and does not polute your system with pkgs, however is harder to operate.
+  1. Install [docker](https://www.docker.com/)
+  2. Build the container as described in `docker/setup.sh` or `scripts/docker/setup.sh`
+  3. Before compiling, start the container environment with `docker/run.sh` or `scripts/docker/run.sh`. Once the environment is up and running, `cd` into `/home/rezos` and carry on with compiling.
+###
+## C. Compile!
+The whole system can be built with `make`, this produces a `RezOS-x86_64.iso` file in `build/` that can then by run in an emulator with `make run-x86_64`
+- If you wish to target `aarch64`, simply replace the `x86_64`in the make commands with it.
+- More make options are documented in the `Makefile` header
