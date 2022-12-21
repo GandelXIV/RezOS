@@ -18,9 +18,7 @@ A modern operating system written in the rust programming language.
 2. Update git submodules <br>
 `git submodule update --init --progress`
 ## B. Prepare the environment
-1. Configure the project as described in
-`./configure.sh`
-2. Install dependencies, there are 2 ways of doing this:
+Install dependencies, there are 2 ways of doing this:
 ### Locally
   This option is only viable on linux, so if you are on a different platform consider using the Docker method. <br> <br>
   Use an install script located in `scripts/install/all/{your-distro}.sh`. <br> 
@@ -32,7 +30,10 @@ A modern operating system written in the rust programming language.
   2. Build the container as described in `docker/setup.sh` or `scripts/docker/setup.sh`
   3. Before compiling, start the container environment with `docker/run.sh` or `scripts/docker/run.sh`. Once the environment is up and running, `cd` into `/home/rezos` and carry on with compiling.
 ###
-## C. Compile!
+## C. Configure
+One last step before compiling is to configure the project, you need to do this only once. <br> Either run the `./configure.sh` or follow the steps in it manually.
+##
+## D. Compile!
 The whole system can be built with `make`, this produces a `RezOS-x86_64.iso` file in `build/` that can then by run in an emulator with `make run-x86_64`
 - If you wish to target `aarch64`, simply replace the `x86_64`in the make commands with it.
 - More make options are documented in the `Makefile` header
