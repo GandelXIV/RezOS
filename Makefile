@@ -19,7 +19,6 @@ PATH_LIMINE_BIN ?= limine/bin/
 ############ GENERICS
 
 RKERNEL_SRC = kernel/Cargo* \
-							kernel/kernel.ld \
 							kernel/rust-toolchain \
 							kernel/src/* \
 							kernel/src/memman/* \
@@ -28,12 +27,6 @@ RKERNEL_SRC = kernel/Cargo* \
 
 # https://stackoverflow.com/questions/2483182/recursive-wildcards-in-gnu-make
 rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
-
-# 1 = isoroot dir
-# 2 = output filename
-define generate_iso_image_base
-	xorriso -as mkisofs -b limine-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table --efi-boot limine-cd-efi.bin -efi-boot-part --efi-boot-image $(1) -o $(2)
-endef
 
 # 1 = limine configure features
 define compile_limine_base
@@ -46,9 +39,10 @@ endef
 # 1 = triple/target
 # 2 = linked dependencies
 # 3 = output filename
+# 4 = linker
 define compile_kernel
 	cd kernel/ && $(CARGO) build --target triple/$(1).json --lib $(if $(KERNEL_BUILD_RELEASE), --release, )
-	ld -T kernel/kernel.ld -o $(3) $(2) $(if $(KERNEL_BUILD_RELEASE), kernel/target/$(1)/release/libkernel.a, kernel/target/$(1)/debug/libkernel.a)
+	$(4) -T kernel/link/$(1).ld -o $(3) $(2) $(if $(KERNEL_BUILD_RELEASE), kernel/target/$(1)/release/libkernel.a, kernel/target/$(1)/debug/libkernel.a)
 endef
 
 # 1 = destination
@@ -60,7 +54,7 @@ endef
 
 ############ x86_64 RECIEPES
 
-RKERNEL_SRC_x86_64 = $(RKERNEL_SRC) kernel/src/arch/amd64/* kernel/triple/x86_64.json
+RKERNEL_SRC_x86_64 = $(RKERNEL_SRC) kernel/src/arch/amd64/* kernel/triple/x86_64.json kernel/link/x86_64.ld
 
 LIMINE_ARTIFACTS_x86_64 = $(PATH_LIMINE_BIN)/limine-deploy \
 													$(PATH_LIMINE_BIN)/limine.sys \
@@ -76,7 +70,12 @@ ISODEPS_x86_64 = build/isoroot_x86_64/kernel.bin \
 
 # main
 build/RezOS-x86_64.iso: $(ISODEPS_x86_64) build/limine-deploy
-	$(call generate_iso_image_base, build/isoroot_x86_64/, $@)
+	xorriso -as mkisofs -b limine-cd.bin \
+					-no-emul-boot \
+					-boot-load-size 4 \
+					-boot-info-table --efi-boot limine-cd-efi.bin -efi-boot-part \
+					--efi-boot-image \
+					build/isoroot_x86_64/ -o $@
 	build/limine-deploy $@
 	@echo "Done!"
 
@@ -93,14 +92,40 @@ $(LIMINE_ARTIFACTS_x86_64): $(call rwildcard limine/*)
 
 # the kernel itself compiles to a static library that gets linked to kentry.asm which holds the entry point and some additional structures and functions (such as limine requests)
 build/kernel.x86_64.bin: build/kentry.x86_64.o $(RKERNEL_SRC_x86_64)
-	$(call compile_kernel,x86_64, $<, $@)
+	$(call compile_kernel,x86_64, $<, $@, ld)
 	
 build/kentry.x86_64.o: kernel/kentry/x86_64/*
 	nasm -f elf64 kernel/kentry/x86_64/kentry.asm -o $@
 
 isodeps_x86_64: $(ISODEPS_x86_64)
 	echo "Built all required dependencies!"
+
 ############ aarch64 RECIEPES
+
+RKERNEL_SRC_aarch64 = $(RKERNEL_SRC) kernel/src/arch/arm64/* kernel/triple/aarch64.json kernel/link/aarch64.ld
+
+ISODEPS_aarch64 = build/isoroot_aarch64/kernel.bin \
+									build/isoroot_aarch64/limine.cfg \
+									build/isoroot_aarch64/BOOTAA64.EFI
+
+build/RezOS-aarch64.iso: $(ISODEPS_aarch64)
+	xorriso -as mkisofs \
+					-no-emul-boot \
+					-boot-info-table \
+					--efi-boot BOOTAA64.EFI -efi-boot-part \
+					--efi-boot-image \
+					build/isoroot_aarch64/ -o $@
+	@echo "Done!"
+
+$(eval $(call link, build/isoroot_aarch64/kernel.bin, 	build/kernel.aarch64.bin ))
+$(eval $(call link, build/isoroot_aarch64/limine.cfg, 	kernel/limine.cfg ))
+$(eval $(call link, build/isoroot_aarch64/BOOTAA64.EFI, $(PATH_LIMINE_BIN)/BOOTAA64.EFI ))
+
+$(PATH_LIMINE_BIN)/BOOTAA64.EFI: $(call rwildcard limine/*)
+	$(call compile_limine_base, --enable-uefi-aarch64)
+
+build/kernel.aarch64.bin: build/kentry.aarch64.o $(RKERNEL_SRC_aarch64)
+	$(call compile_kernel,aarch64, $<, $@, aarch64-linux-gnu-ld)
 
 build/kentry.aarch64.o: kernel/kentry/aarch64/*
 	aarch64-linux-gnu-as kernel/kentry/aarch64/kentry.S -o $@

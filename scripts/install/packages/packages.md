@@ -16,3 +16,4 @@
 - llvm <br>
 - lld <br>
 - gcc-aarch64-linux-gnu <br>
+- clang
