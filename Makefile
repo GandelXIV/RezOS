@@ -156,12 +156,15 @@ clean:
 	rm -f log/*
 
 deep-clean: clean clean-limine
-	rm -rf kernel/target/*
+	rm -rf kernel/target/
 	rm -f $(PATH_MAKEFILE2GRAPH)
 
 clean-limine:
-	cd limine && make distclean
+	cd limine
 	rm -f limine/bin/*
 	rm -f limine/cross-files/config.log
 	rm -f limine/cross-files/config.status
 	rm -f limine/cross-files/i686-toolchain.mk
+
+distclean-limine:
+	cd limine && make distclean
