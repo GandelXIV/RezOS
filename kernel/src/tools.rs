@@ -4,7 +4,23 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-// implements Into<str> for any empty variant of a public enum
+//! This module contains various utility functions and macros used everywhere
+
+
+/// implements Into<&str> for a public enum that converts the name of a variant into a string.
+///
+/// # Example
+/// ```
+/// enum_names! {
+///     pub enum Sum {
+///         Foo,
+///         Bar,
+///     }
+/// }
+///
+/// assert_eq!(Sum::Foo.into(), "Foo");
+/// assert_eq!(Sum::Bar.into(), "Bar");
+/// ```
 #[macro_export]
 #[macro_use]
 macro_rules! enum_names {
@@ -33,26 +49,71 @@ macro_rules! enum_names {
         bitfield!(set_flag, bool, 60); // creates a set_flag() function that takes a bool and writes to bit 60 of the u64
     }
 */
+/// Generates functions to mutate bitranges in the binary of a type
+/// Use this inside an `impl` block
+///
+/// # examples
+/// ```
+/// struct Token(u64);
+/// impl Token {
+///     bitfield!(set_foo, u16, 14, 0); // generates a set_foo function that takes an u16 and writes it into bits 0-14
+///     bitfield!(set_flag, get_flag, bool, 17); // generates a set_flag function that takes a boolean and writes to bit 17
+///     bitfield!(set_bar, get_bar, u32, 52, 20); // generates a set_flag and get_flag function that operate on bits 20-52
+///
+///     fn flip_flag(&mut self) {
+///         self.set_flag( !self.get_flag() )
+///     }
+///     ...
+/// }
+/// ```
 #[macro_export]
 #[macro_use]
 macro_rules! bitfield {
-    // setters
+    // bitrange, only setter
     ($name:ident, $typ:ty, $h:literal, $l:literal) => {
         const fn $name(&mut self, payload: $typ) {
             *self = Self(bin_insert(self.0, payload, $h, $l));
         }
     };
 
+    // bitrange, setter & getter
+    ($set_name:ident, $get_name:ident, $typ:ty, $h:literal, $l:literal) => {
+        const fn $set_name(&mut self, payload: $typ) {
+            *self = Self(bin_insert(self.0, payload, $h, $l));
+        }
+
+        const fn $get_name(&mut self) -> $typ {
+            bin_extract(self.0, $h, $l).into()
+        }
+    };
+    
+    // single-bit, only setter
     ($name:ident, $typ:ty, $b:literal) => {
         const fn $name(&mut self, payload: $typ) {
             *self = Self(bin_insert(self.0, payload, $b, $b));
         }
     };
+
+    // single bit, setter & getter
+    ($set_name:ident, $get_name:ident, $typ:ty, $b:literal) => {
+        const fn $set_name(&mut self, payload: $typ) {
+            *self = Self(bin_insert(self.0, payload, $b, $b));
+        }
+
+        const fn $get_name(&self) -> $typ {
+            bin_extract(self.0, $b, $b).into()
+        }
+    };
 }
 
-// NOTE: The following 2 functions do NOT bound check the payload fits
 
-// cuts out bits 'higher' to 'lower' from number 'x' as binary
+/// reads bits from a binary value 
+///
+/// # examples
+/// ```
+/// assert_eq!(bin_extract(0b11110011, 4, 1), 0b1001)
+/// ```
+
 pub const fn bin_extract<T: Into<u64>>(target: T, higher: usize, lower: usize) -> u64
 where
     u64: ~const From<T>,
@@ -63,8 +124,13 @@ where
     (target.into() >> lower) & ((1 << (higher + 1 - lower)) - 1)
 }
 
-// inserts a binary sequence into another one
-// WARNING: does not check if 'payload' fits into the range higher<->lower
+/// inserts a binary sequence into another one
+///
+/// # examples
+/// ```
+/// assert_eq!(bin_insert(0b0000000000000000, 0b00001111, 6, 3), 0b0000000000111100)
+/// assert_eq!(bin_insert(0b1110001010001100, 0b101, 16, 14), 0b1010001010001100)
+/// ```
 pub const fn bin_insert<T: Into<u64>, U: Into<u64>>(
     target: T,
     payload: U,

@@ -4,6 +4,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+//! The core part of the kernel written in rust. It compiles to a static library that then gets linked to `kentry` to produce the binary.
+
 #![no_std]
 #![no_main]
 #![crate_type = "staticlib"]
@@ -23,13 +25,14 @@
 */
 
 use core::panic::{self, PanicInfo};
-// Do not remove these imports, they prevent link errors
+// Do not remove these imports, they may useless but they prevent link errors
 #[allow(unused_imports)]
-pub use rlibc;
-pub use rlibcex;
+use rlibc;
+use rlibcex;
 
+/// kernel panic handler, uses the `log` module internally
 #[panic_handler]
-fn kpanic(info: &core::panic::PanicInfo<'_>) -> ! {
+pub fn kpanic(info: &core::panic::PanicInfo<'_>) -> ! {
     log!("\nKERNEL PANIC!!!\n");
     // payload
     match info.payload().downcast_ref::<&str>() {
@@ -50,14 +53,21 @@ fn kpanic(info: &core::panic::PanicInfo<'_>) -> ! {
     loop {}
 }
 
-mod arch;
-mod limine;
-mod log;
-mod memman;
-mod tools;
+/// contains architecture specific code
+pub mod arch;
+/// handles the bootloader's limine interface
+pub mod limine;
+/// handles logging info
+pub mod log;
+/// handles memory managment
+pub mod memman;
+/// contains various utilities used everywhere
+pub mod tools;
 
 use memman::map::{MapArea, MemoryMapper};
 use tinyvec::ArrayVec;
+
+/// kernel main function called & linked by `kentry`
 
 #[no_mangle]
 pub extern "C" fn kmain() {
