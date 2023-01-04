@@ -55,7 +55,7 @@ fn kpanic(info: &core::panic::PanicInfo<'_>) -> ! {
 
 /// contains architecture specific code.
 pub mod arch;
-/// handles the bootloader's limine interface.
+/// This module handles all things limine.
 pub mod limine;
 /// Handles logging info in the kernel runtime.
 pub mod log;

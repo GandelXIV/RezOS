@@ -70,6 +70,8 @@ endef
 
 RKERNEL_SRC_x86_64 = $(RKERNEL_SRC) kernel/src/arch/amd64/* kernel/triple/x86_64.json kernel/link/x86_64.ld
 
+RKERNEL_DOC_x86_64 = kernel/target/x86_64/doc/kernel/
+
 LIMINE_ARTIFACTS_x86_64 = $(PATH_LIMINE_BIN)/limine-deploy \
 													$(PATH_LIMINE_BIN)/limine.sys \
 													$(PATH_LIMINE_BIN)/limine-cd-efi.bin \
@@ -114,6 +116,11 @@ build/kentry.x86_64.o: kernel/kentry/x86_64/*
 isodeps_x86_64: $(ISODEPS_x86_64)
 	echo "Built all required dependencies!"
 
+# docs
+
+$(RKERNEL_DOC_x86_64): $(RKERNEL_SRC_x86_64)
+	$(call document_kernel,x86_64)
+
 ############ aarch64 RECIEPES
 
 RKERNEL_SRC_aarch64 = $(RKERNEL_SRC) kernel/src/arch/arm64/* kernel/triple/aarch64.json kernel/link/aarch64.ld
@@ -154,7 +161,7 @@ $(RKERNEL_DOC_aarch64): $(RKERNEL_SRC_aarch64)
 ############ COMMON RECIEPES
 
 # visual representation of the build process
-log/buildflow.png: $(PATH_MAKEFILE2GRAPH) Makefile
+doc/buildflow.png: $(PATH_MAKEFILE2GRAPH) Makefile
 	make all -Bnd | $(PATH_MAKEFILE2GRAPH) -r | dot -Tpng -o $@
 
 $(PATH_MAKEFILE2GRAPH):
@@ -169,7 +176,7 @@ RUN_ARGS = -D log/qemu.log -cdrom
 all: build/RezOS-x86_64.iso build/RezOS-aarch64.iso doc
 	@echo "Done all jobs!"
 
-doc: doc/buildflow.png $(RKERNEL_DOC_aarch64)
+doc: doc/buildflow.png $(RKERNEL_DOC_aarch64) $(RKERNEL_DOC_x86_64)
 	@echo "Documentation generated!"
 
 run-x86_64: build/RezOS-x86_64.iso

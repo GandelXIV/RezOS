@@ -6,4 +6,5 @@
 /isoroot/*
 /log/
 
+doc/buildflow.png
 smelt.yml

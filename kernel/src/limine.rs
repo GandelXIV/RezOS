@@ -4,8 +4,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-// This module handles all things limine
-// See more about the protocol: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md
+//! <br> See more about the protocol: `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md`
+
 use crate::enum_names;
 use core::convert::TryFrom;
 use core::ffi::CStr;
@@ -13,16 +13,18 @@ use core::iter::Iterator;
 use lazy_static::lazy_static;
 use spin::Mutex;
 
-// simple pointer wrappers that can be replaced in the future for something like NonNull<T>
+/// simple pointer wrapper that can be replaced in the future for something like `NonNull<T>`
 type Ptr<T> = *const T;
+/// simple mutable pointer wrapper that can be replaced in the future for something like `NonNull<T>`
 type MutPtr<T> = *mut T;
 
-// See more: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-callback
+/// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-callback`
 type TerminalCallbackFunction = extern "C" fn(Ptr<Terminal>, u64, u64, u64, u64);
 
-// function provided by limine to simplify display access
-// WARNING: The function is NOT thread-safe, NOT reentrant, per-terminal.
-// we access it from a Mutex<TerminalWriter> e.g. TERM0
+/// function provided by limine to simplify display access. 
+///
+/// WARNING: The function is NOT thread-safe, NOT reentrant, per-terminal. <br>
+/// We access it from a `Mutex<TerminalWriter>` e.g. `TERM0`.
 type TerminalWriteFunction = extern "C" fn(Ptr<Terminal>, *const [u8], usize);
 
 // Linked from kentry/limine.asm
@@ -37,19 +39,21 @@ extern "C" {
 }
 
 lazy_static! {
-    // handles concurrent terminal.write() calls
+    /// handles concurrent `terminal.write()` calls
     static ref TERM0: Mutex<TerminalWriter> =
         Mutex::new(TerminalWriter::new(0).expect("Could not open limine terminal"));
 }
 
-// public interface to print to TERM0
-// accepts ASCII (non utf8 strings) -> b"Hello"
+/// public interface to print to TERM0
+/// , accepts ASCII (non utf8 strings) e.g. `b"Hello"`
+///
+/// It is not adviced to use this, as the bootloader facilities may be reclaimed.
 pub fn print_bytes(s: &[u8]) {
     let access = TERM0.lock();
     ((access).write)(access.get_terminal(), s, s.len());
 }
 
-// outdated function
+/// outdated function
 pub fn print_hex(mut n: usize) {
     let mut x: [u8; 18] = [0; 18];
     x[0] = b'0';
@@ -67,7 +71,7 @@ pub fn print_hex(mut n: usize) {
     ((access).write)(access.get_terminal(), &x, x.len());
 }
 
-// outdated function
+/// outdated function
 pub fn print_dec(mut n: usize) {
     let mut x: [u8; 20] = [0; 20];
     for i in 0..x.len() {
@@ -78,9 +82,9 @@ pub fn print_dec(mut n: usize) {
     ((access).write)(access.get_terminal(), &x, x.len());
 }
 
-// macro that completes a request and response struct with all the defaults:
-// https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#features
-
+/// macro that completes a request and response struct with all the default fields. 
+///
+/// See more: `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#features`
 macro_rules! limine_feature {
     (
         struct $request:ident {
@@ -111,8 +115,9 @@ macro_rules! limine_feature {
 // ======= Boot Info feature
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-feature
 
-// returns the bootloaders -> (name, version)
-// WARNING: assumes the response has static lifetime
+/// returns the bootloaders name and version
+///
+/// WARNING: assumes the response has static lifetime
 pub fn bootloader_info() -> (&'static [u8], &'static [u8]) {
     let response = unsafe { &*(LIMINE_REQUEST_BOOT_INFO.response) };
     (
