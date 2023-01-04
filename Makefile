@@ -45,12 +45,26 @@ define compile_kernel
 	$(4) -T kernel/link/$(1).ld -o $(3) $(2) $(if $(KERNEL_BUILD_RELEASE), kernel/target/$(1)/release/libkernel.a, kernel/target/$(1)/debug/libkernel.a)
 endef
 
+# 1 = triple/target
+define document_kernel
+	cd kernel/ && $(CARGO) doc --document-private-items --target triple/$(1).json
+endef
+
 # 1 = destination
 # 2 = source
 define link
 $(1): $(2)
 	ln -f $(2) $(1)
 endef
+
+# 1 = destination
+# 2 = source
+define symlink
+$(1): $(2)
+	rm -f  $(1)
+	ln -sf $(2) $(1)
+endef
+
 
 ############ x86_64 RECIEPES
 
@@ -104,6 +118,8 @@ isodeps_x86_64: $(ISODEPS_x86_64)
 
 RKERNEL_SRC_aarch64 = $(RKERNEL_SRC) kernel/src/arch/arm64/* kernel/triple/aarch64.json kernel/link/aarch64.ld
 
+RKERNEL_DOC_aarch64 = kernel/target/aarch64/doc/kernel/
+
 ISODEPS_aarch64 = build/isoroot_aarch64/kernel.bin \
 									build/isoroot_aarch64/limine.cfg \
 									build/isoroot_aarch64/BOOTAA64.EFI
@@ -130,6 +146,11 @@ build/kernel.aarch64.bin: build/kentry.aarch64.o $(RKERNEL_SRC_aarch64)
 build/kentry.aarch64.o: kernel/kentry/aarch64/*
 	aarch64-linux-gnu-as kernel/kentry/aarch64/kentry.S -o $@
 
+# docs
+
+$(RKERNEL_DOC_aarch64): $(RKERNEL_SRC_aarch64)
+	$(call document_kernel,aarch64)
+
 ############ COMMON RECIEPES
 
 # visual representation of the build process
@@ -141,12 +162,15 @@ $(PATH_MAKEFILE2GRAPH):
 
 ############ PHONY (commands, non file targets)
 
-.PHONY: run clean deep-clean
+.PHONY: run clean deep-clean all doc
 
 RUN_ARGS = -D log/qemu.log -cdrom 
 
-all: build/RezOS-x86_64.iso build/RezOS-aarch64.iso log/buildflow.png
+all: build/RezOS-x86_64.iso build/RezOS-aarch64.iso doc
 	@echo "Done all jobs!"
+
+doc: doc/buildflow.png $(RKERNEL_DOC_aarch64)
+	@echo "Documentation generated!"
 
 run-x86_64: build/RezOS-x86_64.iso
 	qemu-system-x86_64 $(RUN_ARGS) $^ $(QEMU_ARGS)
