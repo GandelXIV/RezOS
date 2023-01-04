@@ -134,7 +134,7 @@ build/kentry.aarch64.o: kernel/kentry/aarch64/*
 
 # visual representation of the build process
 log/buildflow.png: $(PATH_MAKEFILE2GRAPH) Makefile
-	make -Bnd | $(PATH_MAKEFILE2GRAPH) -r | dot -Tpng -o $@
+	make all -Bnd | $(PATH_MAKEFILE2GRAPH) -r | dot -Tpng -o $@
 
 $(PATH_MAKEFILE2GRAPH):
 	cd makefile2graph && make
@@ -145,7 +145,7 @@ $(PATH_MAKEFILE2GRAPH):
 
 RUN_ARGS = -D log/qemu.log -cdrom 
 
-all: build/RezOS-x86_64.iso log/buildflow.png
+all: build/RezOS-x86_64.iso build/RezOS-aarch64.iso log/buildflow.png
 	@echo "Done all jobs!"
 
 run-x86_64: build/RezOS-x86_64.iso
