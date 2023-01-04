@@ -4,8 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-//! This module contains various utility functions and macros used everywhere
-
 
 /// implements Into<&str> for a public enum that converts the name of a variant into a string.
 ///
@@ -49,8 +47,8 @@ macro_rules! enum_names {
         bitfield!(set_flag, bool, 60); // creates a set_flag() function that takes a bool and writes to bit 60 of the u64
     }
 */
-/// Generates functions to mutate bitranges in the binary of a type
-/// Use this inside an `impl` block
+/// Generates functions to mutate bitranges in the binary of a type. 
+/// Use this inside an `impl` block.
 ///
 /// # examples
 /// ```

@@ -32,7 +32,7 @@ use rlibcex;
 
 /// kernel panic handler, uses the `log` module internally
 #[panic_handler]
-pub fn kpanic(info: &core::panic::PanicInfo<'_>) -> ! {
+fn kpanic(info: &core::panic::PanicInfo<'_>) -> ! {
     log!("\nKERNEL PANIC!!!\n");
     // payload
     match info.payload().downcast_ref::<&str>() {
@@ -53,15 +53,15 @@ pub fn kpanic(info: &core::panic::PanicInfo<'_>) -> ! {
     loop {}
 }
 
-/// contains architecture specific code
+/// contains architecture specific code.
 pub mod arch;
-/// handles the bootloader's limine interface
+/// handles the bootloader's limine interface.
 pub mod limine;
-/// handles logging info
+/// Handles logging info in the kernel runtime.
 pub mod log;
-/// handles memory managment
+/// handles memory managment.
 pub mod memman;
-/// contains various utilities used everywhere
+/// contains various utilities used everywhere.
 pub mod tools;
 
 use memman::map::{MapArea, MemoryMapper};
