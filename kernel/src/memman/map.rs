@@ -105,21 +105,20 @@ where
     }
 }
 
-/// Can be returned by `claim()`
+/// Error returned by `claim()`
 ///
 /// ## Variants:
-/// - AlreadyOccupiedBy : The requested region intersects with a claimed region, contains the
+/// - `AlreadyOccupiedBy` : The requested region intersects with a claimed region, contains the
 /// occupant region
-/// - OutOfBound : The requested region does not fit into into the map, returns the allowed dimensions
-
+/// - `OutOfBound` : The requested region does not fit into into the map, returns the allowed dimensions
 #[derive(Debug)]
 pub enum MemoryMapperError {
     AlreadyOccupiedBy((usize, usize)), // contains the occupant region
     OutOfBound((usize, usize)),        // contains the valid Mapper region
 }
 
-// WARNING: these traits are not meant to be used only tinyvec::ArrayVec
-#[derive(Clone, Default)]
+/// Capability representing ownage of a claimed region
+#[derive(Default)]
 pub struct MapArea {
     region: (usize, usize),
 }
@@ -175,13 +174,17 @@ impl Drop for MapArea {
 // Simple implementation of MemoryMapper that uses a statically sized array(table) to store entries.
 // WARNING: will panic if table gets full
 
-const TABLE_SIZE: usize = 400; // max amount of entries
+/// Max ammount of entries in `TableMemoryMapper`
+const TABLE_SIZE: usize = 400;
+
+/// `MemoryMapper` implementation that uses a statically sized table to store claimed entries
 pub struct TableMemoryMapper {
     start: usize,
     end: usize,
     table: Mutex<[Option<(usize, usize)>; TABLE_SIZE]>,
 }
 
+/// `Iterator` object for `TableMemoryMapper` claimed entries
 pub struct TableMap {
     entries: [(usize, usize); TABLE_SIZE],
     count: usize,

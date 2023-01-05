@@ -85,9 +85,11 @@ pub fn print_dec(mut n: usize) {
 
 /// macro that completes a request and response struct with all the default fields. 
 ///
-/// See more: `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#features`
+/// The workings of this macro can be deduced from the source code or context. <br>
+/// See more about limine features: `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#features`
 macro_rules! limine_feature {
     (
+        #[doc = $doc:expr]
         struct $request:ident {
             $($req_field_key:ident : $req_field_type:ty,)*
         }
@@ -97,6 +99,7 @@ macro_rules! limine_feature {
         }
     ) => {
         #[repr(C)]
+        #[doc = $doc]
         struct $request {
             id: [u64; 4],
             revision: u64,
@@ -106,6 +109,7 @@ macro_rules! limine_feature {
 
         #[repr(C)]
         #[derive(Clone)]
+        #[doc = $doc]
         struct $response {
             revision: u64,
             $($res_field_key : $res_field_type,)*
@@ -129,6 +133,9 @@ pub fn bootloader_info() -> (&'static [u8], &'static [u8]) {
 }
 
 limine_feature! {
+
+    /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-feature`
+    
     struct RequestBootInfo{}
 
     struct ResponseBootInfo {
@@ -143,6 +150,9 @@ limine_feature! {
 // private
 
 limine_feature! {
+
+    /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#memory-map-feature` 
+
     struct RequestMemoryMap {}
 
     struct ResponseMemoryMap {
@@ -152,6 +162,7 @@ limine_feature! {
     }
 }
 
+/// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#memory-map-feature` 
 #[repr(C)]
 struct MemoryMapEntry {
     base: u64,
@@ -161,6 +172,8 @@ struct MemoryMapEntry {
 
 // public
 
+// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#memory-map-feature` 
+// Implements `Into<&str>` for its enum variant names
 enum_names! {
     pub enum MemmapEntryType {
         Usable,
@@ -209,12 +222,12 @@ impl Into<&'static [u8]> for MemmapEntryType {
     }
 }*/
 
-// extern interface function used by the rest of the kernel
+/// extern interface function used by the rest of the kernel
 pub fn memory_map() -> MemoryMap {
     MemoryMap::new(unsafe { &*(LIMINE_REQUEST_MEMORY_MAP.response) })
 }
 
-// rust-friendly version of ResponseMemoryMap
+/// rust-friendly version of `ResponseMemoryMap`
 pub struct MemoryMap {
     icount: u64,
     resp_copy: ResponseMemoryMap,
@@ -247,7 +260,7 @@ impl Iterator for MemoryMap {
     }
 }
 
-// rust-friendly version of MemoryMapEntry
+/// rust-friendly version of `MemoryMapEntry`
 pub struct MemmapItem {
     pub range: (usize, usize),
     pub typ: MemmapEntryType,
@@ -257,6 +270,9 @@ pub struct MemmapItem {
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#boot-time-feature
 
 limine_feature! {
+    
+    /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#boot-time-feature`
+
     struct RequestBootTime{}
 
     struct ResponseBootTime {
@@ -264,20 +280,7 @@ limine_feature! {
     }
 }
 
-pub struct Time {
-    pub year: u16,
-    pub month: u8,
-    pub day: u8,
-    pub hour: u8,
-    pub minute: u8,
-    pub second: u8,
-}
-
-// parses the unix time stamp into a more readable structure (Time)
-pub fn boot_time() -> Time {
-    todo!()
-}
-
+/// Gets the unix time at boot
 pub fn boot_time_stamp() -> i64 {
     unsafe { (*LIMINE_REQUEST_BOOT_TIME.response).time }
 }
@@ -286,6 +289,9 @@ pub fn boot_time_stamp() -> i64 {
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#kernel-address-feature
 
 limine_feature! {
+
+    /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#kernel-address-feature`
+
     struct RequestKernelAddress {}
 
     struct ResponseKernelAddress {
@@ -294,10 +300,12 @@ limine_feature! {
     }
 }
 
+/// Get the physical base address for the kernel
 pub fn kernel_address_physical() -> usize {
     (unsafe { (*LIMINE_REQUEST_KERNEL_ADDRESS.response).physical_base }) as usize
 }
 
+/// Get the virtual base address for the kernel
 pub fn kernel_address_virtual() -> usize {
     (unsafe { (*LIMINE_REQUEST_KERNEL_ADDRESS.response).virtual_base }) as usize
 }
@@ -306,6 +314,9 @@ pub fn kernel_address_virtual() -> usize {
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#hhdm-higher-half-direct-map-feature
 
 limine_feature! {
+
+    /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#hhdm-higher-half-direct-map-feature`
+    
     struct RequestHHDM {}
 
     struct ResponseHHDM {
@@ -313,6 +324,7 @@ limine_feature! {
     }
 }
 
+/// Get the higher half direct map
 pub fn hhdm() -> usize {
     (unsafe { (*LIMINE_REQUEST_HHDM.response).offset }) as usize
 }
@@ -321,6 +333,9 @@ pub fn hhdm() -> usize {
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#stack-size-feature
 
 limine_feature! {
+
+    /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#stack-size-feature`
+
     struct RequestStackSize {
         size: u64,
     }
@@ -331,6 +346,7 @@ limine_feature! {
 // ======= Terminal feature
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#bootloader-info-feature
 
+/// Safe wrapper over the `TerminalWriteFunction` by the terminal feature
 struct TerminalWriter {
     term: usize, // pointer to terminal
     write: TerminalWriteFunction,
@@ -361,6 +377,9 @@ impl TerminalWriter {
 }
 
 limine_feature! {
+
+    /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#bootloader-info-feature`
+
     struct RequestTerminal {
         callback: TerminalCallbackFunction,
     }
@@ -372,6 +391,7 @@ limine_feature! {
     }
 }
 
+/// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#bootloader-info-feature`
 #[repr(C)]
 struct Terminal {
     columns: u64,
@@ -379,7 +399,10 @@ struct Terminal {
     framebuffer: Ptr<Framebuffer>,
 }
 
-// use by the Terminal feature and the Framebuffer feature
+/// used by both the Terminal feature and the Framebuffer feature
+///
+/// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#framebuffer-feature`
+/// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#bootloader-info-feature`
 #[repr(C)]
 struct Framebuffer {
     pub address: MutPtr<u8>,
