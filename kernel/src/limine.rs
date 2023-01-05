@@ -4,6 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+//!
 //! <br> See more about the protocol: `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md`
 
 use crate::enum_names;

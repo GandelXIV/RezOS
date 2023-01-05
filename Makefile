@@ -185,6 +185,7 @@ run-x86_64: build/RezOS-x86_64.iso
 clean:
 	find build/ -type f -delete
 	rm -f log/*
+	rm -f doc/buildflow.png
 
 deep-clean: clean clean-limine
 	rm -rf kernel/target/

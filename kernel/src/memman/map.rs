@@ -4,20 +4,26 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-// This module handles direct memory region claimation
+//! This module handles the memory map and claiming physical regions
+
 use crate::log;
 use core::mem;
 use spin::once::Once;
 use spin::Mutex;
 
+/// Alias for the selected global `MemoryMapper` implementation (at compile time)
 pub type GlobalMemoryMapper = TableMemoryMapper;
+/// Global memory map for the whole kernel runtime
 pub static GLOBAL_MEMORY_MAPPER: Once<GlobalMemoryMapper> = Once::new();
 
-// WARNING: region must be usable or it may lead to undefined behaviour
+/// Setup the global memory map in specified region
+///
+/// WARNING: region must not be used and must have full priviliges for ring0 or it may lead to undefined behaviour
 pub unsafe fn set_global(region: (usize, usize)) {
     GLOBAL_MEMORY_MAPPER.call_once(|| GlobalMemoryMapper::manage(region));
 }
 
+/// Globally claims a physical memory region and adds a global memory map entry for it
 pub fn claim_global(region: (usize, usize)) -> Result<MapArea, MemoryMapperError> {
     GLOBAL_MEMORY_MAPPER
         .get()
@@ -25,40 +31,56 @@ pub fn claim_global(region: (usize, usize)) -> Result<MapArea, MemoryMapperError
         .claim(region)
 }
 
+/// Represents a memory region
 type MapItem = (usize, usize);
 
-// I -> iterator returned when memory map requested
+/// Implement for object that manage a memory map of physical regions. They must use interior
+/// mutability as they should work in a concurrent context.
+///
+/// I -> public iterator returned when reading the memory map is requested
 pub trait MemoryMapper<I: Iterator<Item = MapItem>> {
-    // SAFETY! region must adhere to the following:
-    // - must have read & write priviliges for ring0
-    // - must not hold any other already used structures
-    // - must not be externally managed by another MemoryMapper
+    
+    /// Creates and mounts a `MemoryMapper` in specified region
+    /// ## SAFETY: region must adhere to the following:
+    /// - must have read & write priviliges for ring0
+    /// - must not hold any other already used structures
+    /// - must not be externally managed by another MemoryMapper
     unsafe fn manage(region: (usize, usize)) -> Self;
-    // in case the region is occupied, returns Err(occupant region)
+
+    /// Claim a physical memory region and adds a map entry for it
     fn claim(&self, region: (usize, usize)) -> Result<MapArea, MemoryMapperError>;
-    // WARNING: free() should panic if area was not found, because it implies one of the following:
-    //  1. the area was never claimed and the structure used has been invalid the whole time -> UB
-    //  2. the area was force_freed() which means it may have been claimed by some other entity in
-    //     the mean time -> UB
+
+    /// Disown a `MapArea` and remove its entry in the map
+    ///
+    /// ## WARNING: free() should panic if area was not found, because it implies one of the following:
+    ///  1. the area was never claimed in the first place and the structure used has been invalid the whole time -> UB
+    ///  2. the area was force_freed() which means it may have been claimed by some other entity in
+    ///     the mean time -> UB
     fn free(&self, area: MapArea);
-    // WARNING: if the region is part of a used living Area, this may lead to UB.
-    // Use ONLY if you are sure that the owning Area is dead/not used.
+
+    /// Forcefully remove a region entry in the map
+    /// ## SAFETY: The region must not be claimed as it may create an orphan `MapArea` which leads
+    /// to UB
     unsafe fn force_free(&self, region: (usize, usize)) {
         self.free(MapArea::new(region));
     }
-    // Iterate through claimed regions
+
+    /// Iterate through claimed regions
     fn iter(&self) -> I;
-    // Iterator through unclaimed regions
+    
+    /// Iterate through unclaimed regions between the claimed regions in the map
     fn gaps(&self) -> MapGaps<I> {
         MapGaps {
             iter: self.iter(),
             last: self.dimensions().0,
         }
     }
-    // getters
+    
+    /// Get the complete managed region
     fn dimensions(&self) -> MapItem;
 }
 
+/// Iterate through the free space between map entries `I`
 pub struct MapGaps<I: Iterator<Item = MapItem>> {
     iter: I,
     last: usize,
@@ -82,6 +104,13 @@ where
         None
     }
 }
+
+/// Can be returned by `claim()`
+///
+/// ## Variants:
+/// - AlreadyOccupiedBy : The requested region intersects with a claimed region, contains the
+/// occupant region
+/// - OutOfBound : The requested region does not fit into into the map, returns the allowed dimensions
 
 #[derive(Debug)]
 pub enum MemoryMapperError {
