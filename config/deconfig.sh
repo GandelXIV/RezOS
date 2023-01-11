@@ -4,10 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+# This script cleans configuration links from the whole project
+
+set -e
+
+echo "Deconfiguring..."
+
 set -x
 
-mkdir -p build/
-rm -rf isoroot/ # dir moved to build/
-mkdir -p build/isoroot_x86_64/
-mkdir -p build/isoroot_aarch64/
-mkdir -p log/
+rm -f kernel/kentry/aarch64/config.S
+rm -f kernel/kentry/x86_64/config.asm
+rm -f kernel/src/config.rs
+
+echo "Deconfigured!"

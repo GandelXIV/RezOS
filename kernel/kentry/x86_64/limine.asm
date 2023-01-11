@@ -99,8 +99,7 @@ LIMINE_REQUEST_STACK_SIZE:
 ; pointer to the response
 .response dq 0
 ; requested stack size
-; 16 MiB to make sure
-.size     dq 0xFFFFFF
+.size     dq CONFIG_STACK_SIZE
 
 ; keep this on the bottom
 CALLBACK:

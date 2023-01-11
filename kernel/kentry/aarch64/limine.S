@@ -102,6 +102,6 @@ LIMINE_REQUEST_STACK_SIZE:
 .quad 0 // revision
 .quad 0 // ptr to response
 // requested stack size, 16MiB to make sure
-.quad 0xFFFFFF
+.quad CONFIG_STACK_SIZE
 
 callback:

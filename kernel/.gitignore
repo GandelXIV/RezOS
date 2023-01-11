@@ -1,0 +1,3 @@
+kentry/aarch64/config.S
+kentry/x86_64/config.asm
+kernel/src/config.rs

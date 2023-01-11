@@ -1,0 +1,5 @@
+{
+    "kentry-aarch64.S"  : "kernel/kentry/aarch64/config.S",
+    "kentry-x86_64.asm" : "kernel/kentry/x86_64/config.asm",
+    "rkernel.rs"        : "kernel/src/config.rs"
+}

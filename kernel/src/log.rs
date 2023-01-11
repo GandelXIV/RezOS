@@ -47,9 +47,11 @@ macro_rules! log {
 /// Size of the static buffer for `StaticLog` in bytes
 const STATIC_LOG_MAX_CHARACTERS: usize = 204_800;
 
-/// This simple implementation of `GlobalLog` writes all info to `limine::print_bytes` and stores
-/// it in a static buffer. One big issue with this is that if the buffer fills using `log!()` will
-/// cause a `PRINT_PANIC`. The only possible fix is to increase `STATIC_LOG_MAX_CHARACTERS`,
+/// Simple implementation of `GlobalLog` with a static size/limit.
+///
+/// This writes all info to `limine::print_bytes` and stores it in a static buffer. 
+/// One big issue with this is that if the buffer fills using `log!()` will cause a `PRINT_PANIC`. 
+/// The only possible fix is to increase `STATIC_LOG_MAX_CHARACTERS`, 
 /// recompile and hope it does not fill again.
 struct StaticLog {
     content: ArrayString<STATIC_LOG_MAX_CHARACTERS>,

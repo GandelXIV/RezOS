@@ -8,6 +8,7 @@
 .extern kmain
 .globl _start
 
+.include "kernel/kentry/aarch64/config.S"
 .include "kernel/kentry/aarch64/limine.S"
 
 _start:

@@ -4,6 +4,8 @@
 
 section .text
 
+; configuration
+%include "kernel/kentry/x86_64/config.asm"
 ; included into .text to not get optimised out
 %include "kernel/kentry/x86_64/limine.asm"
 
