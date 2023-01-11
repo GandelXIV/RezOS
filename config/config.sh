@@ -27,5 +27,6 @@ set -x
 ln $PROFILE/kentry-aarch64.S   kernel/kentry/aarch64/config.S
 ln $PROFILE/kentry-x86_64.asm  kernel/kentry/x86_64/config.asm
 ln $PROFILE/rkernel.rs         kernel/src/config.rs
+ln $PROFILE/Makeconfig.mk      config.mk
 
 echo "Configured!"

@@ -1,4 +1,4 @@
 # Ignore all possible personal config profiles except for default
 
 profiles/*
-!profiles/default/*
+!profiles/default

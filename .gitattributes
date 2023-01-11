@@ -4,3 +4,4 @@
 *.asm   linguist-language=assembly
 *.c     linguist-language=C
 *.h     linguist-language=C
+*.mk    linguist-language=Makefile
