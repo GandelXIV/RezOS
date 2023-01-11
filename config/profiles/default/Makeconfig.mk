@@ -1,3 +1,6 @@
+# All of these options can be change at runtime using the follow syntax:
+# make [TARGETS] [OPTION1]=[VALUE1] [OPTION2]=[VALUE2] ...
+
 # compilers the rust kernel code with the --release flag
 KERNEL_BUILD_RELEASE ?= # either yes|empty
 
