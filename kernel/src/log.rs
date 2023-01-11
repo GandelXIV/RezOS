@@ -35,6 +35,8 @@ pub fn print(msg: Arguments) {
 }
 
 /// Main macro used to log data, similar syntax to the standart `print!()`
+///
+/// WARNING: In newer rust version using padding -> blocks the main thread for an uknown reason
 #[macro_export]
 macro_rules! log {
     ($($arg:tt)*) => ($crate::log::print(format_args!($($arg)*)));

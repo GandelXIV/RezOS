@@ -115,7 +115,9 @@ pub extern "C" fn kmain() {
             }
         }
         let print_typ: &str = region.typ.into();
-        log!("{:023} 0x{:016X} - 0x{:016X}\n", print_typ, start, end);
+        // original: log!("{:023} 0x{:016X} - 0x{:016X}\n", print_typ, start, end);
+        log!("{} {:X} - {:X}\n", print_typ, start, end);
+
     }
 
     /*
@@ -131,8 +133,10 @@ pub extern "C" fn kmain() {
     let kernel_physical_address = limine::kernel_address_physical();
     let kernel_virtual_address = limine::kernel_address_virtual();
     log!("[ Kernel Address ]\n");
-    log!("physical: {:016X}\n", kernel_physical_address);
-    log!("virtual:  {:016X}\n", kernel_virtual_address);
+    // original: log!("physical: {:016X}\n", kernel_physical_address);
+    log!("physical: {:X}\n", kernel_physical_address);
+    // original: log!("virtual:  {:016X}\n", kernel_virtual_address);
+    log!("virtual:  {:X}\n", kernel_virtual_address);
 
     // HHDM
     let hhdm = limine::hhdm();
