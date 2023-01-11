@@ -20,6 +20,13 @@ fi
 
 PROFILE=$PROFILE_DIR/$1
 
+echo "Creating directories"
+
+mkdir -p build/
+mkdir -p build/isoroot_aarch64/
+mkdir -p build/isoroot_x86_64/
+mkdir -p log/
+
 echo "Configuring..."
 
 set -x
