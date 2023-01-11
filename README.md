@@ -31,7 +31,7 @@ Install dependencies, there are 2 ways of doing this:
   3. Before compiling, start the container environment with `docker/run.sh` or `scripts/docker/run.sh`. Once the environment is up and running, `cd` into `/home/rezos` and carry on with compiling.
 ###
 ## C. Configure
-One last step before compiling is to configure the project, you need to do this only once. <br> Either run the `./configure.sh` or follow the steps in it manually.
+One last step before compiling is to configure the project, you need to do this only once. <br> Either run `./config.sh` or follow the steps in `config/README.md`.
 ##
 ## D. Compile!
 The whole system can be built with `make`, this produces a `RezOS-x86_64.iso` file in `build/` that can then by run in an emulator with `make run-x86_64`
