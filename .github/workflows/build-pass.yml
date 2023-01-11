@@ -20,7 +20,7 @@ jobs:
       - name: install rust
         run: scripts/install/rust-linux.sh
       - name: configure
-        run: ./configure.sh 
+        run: ./config.sh default
       - name: Build x86_64
         run: source $HOME/.cargo/env && make build/RezOS-x86_64.iso
       - name: Build aarch64
