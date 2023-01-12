@@ -22,7 +22,7 @@ type MutPtr<T> = *mut T;
 /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-callback`
 type TerminalCallbackFunction = extern "C" fn(Ptr<Terminal>, u64, u64, u64, u64);
 
-/// function provided by limine to simplify display access. 
+/// function provided by limine to simplify display access.
 ///
 /// WARNING: The function is NOT thread-safe, NOT reentrant, per-terminal. <br>
 /// We access it from a `Mutex<TerminalWriter>` e.g. `TERM0`.
@@ -83,7 +83,7 @@ pub fn print_dec(mut n: usize) {
     ((access).write)(access.get_terminal(), &x, x.len());
 }
 
-/// macro that completes a request and response struct with all the default fields. 
+/// macro that completes a request and response struct with all the default fields.
 ///
 /// The workings of this macro can be deduced from the source code or context. <br>
 /// See more about limine features: `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#features`
@@ -135,7 +135,7 @@ pub fn bootloader_info() -> (&'static [u8], &'static [u8]) {
 limine_feature! {
 
     /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-feature`
-    
+
     struct RequestBootInfo{}
 
     struct ResponseBootInfo {
@@ -151,7 +151,7 @@ limine_feature! {
 
 limine_feature! {
 
-    /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#memory-map-feature` 
+    /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#memory-map-feature`
 
     struct RequestMemoryMap {}
 
@@ -162,7 +162,7 @@ limine_feature! {
     }
 }
 
-/// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#memory-map-feature` 
+/// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#memory-map-feature`
 #[repr(C)]
 struct MemoryMapEntry {
     base: u64,
@@ -172,7 +172,7 @@ struct MemoryMapEntry {
 
 // public
 
-// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#memory-map-feature` 
+// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#memory-map-feature`
 // Implements `Into<&str>` for its enum variant names
 enum_names! {
     pub enum MemmapEntryType {
@@ -270,7 +270,7 @@ pub struct MemmapItem {
 // See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#boot-time-feature
 
 limine_feature! {
-    
+
     /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#boot-time-feature`
 
     struct RequestBootTime{}
@@ -316,7 +316,7 @@ pub fn kernel_address_virtual() -> usize {
 limine_feature! {
 
     /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#hhdm-higher-half-direct-map-feature`
-    
+
     struct RequestHHDM {}
 
     struct ResponseHHDM {

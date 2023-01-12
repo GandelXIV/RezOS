@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 /// implements Into<&str> for a public enum that converts the name of a variant into a string.
 ///
 /// # Example
@@ -22,9 +21,11 @@
 #[macro_export]
 #[macro_use]
 macro_rules! enum_names {
-    (pub enum $name:ident {
-        $($variant:ident),*,
-    }) => {
+    (
+        pub enum $name:ident {
+            $($variant:ident),*,
+        }
+    ) => {
         pub enum $name {
             $($variant),*
         }
@@ -47,7 +48,7 @@ macro_rules! enum_names {
         bitfield!(set_flag, bool, 60); // creates a set_flag() function that takes a bool and writes to bit 60 of the u64
     }
 */
-/// Generates functions to mutate bitranges in the binary of a type. 
+/// Generates functions to mutate bitranges in the binary of a type.
 /// Use this inside an `impl` block.
 ///
 /// # examples
@@ -84,7 +85,7 @@ macro_rules! bitfield {
             bin_extract(self.0, $h, $l).into()
         }
     };
-    
+
     // single-bit, only setter
     ($name:ident, $typ:ty, $b:literal) => {
         const fn $name(&mut self, payload: $typ) {
@@ -104,8 +105,7 @@ macro_rules! bitfield {
     };
 }
 
-
-/// reads bits from a binary value 
+/// reads bits from a binary value
 ///
 /// # examples
 /// ```

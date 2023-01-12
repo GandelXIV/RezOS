@@ -39,7 +39,6 @@ type MapItem = (usize, usize);
 ///
 /// I -> public iterator returned when reading the memory map is requested
 pub trait MemoryMapper<I: Iterator<Item = MapItem>> {
-    
     /// Creates and mounts a `MemoryMapper` in specified region
     /// ## SAFETY: region must adhere to the following:
     /// - must have read & write priviliges for ring0
@@ -67,7 +66,7 @@ pub trait MemoryMapper<I: Iterator<Item = MapItem>> {
 
     /// Iterate through claimed regions
     fn iter(&self) -> I;
-    
+
     /// Iterate through unclaimed regions between the claimed regions in the map
     fn gaps(&self) -> MapGaps<I> {
         MapGaps {
@@ -75,7 +74,7 @@ pub trait MemoryMapper<I: Iterator<Item = MapItem>> {
             last: self.dimensions().0,
         }
     }
-    
+
     /// Get the complete managed region
     fn dimensions(&self) -> MapItem;
 }

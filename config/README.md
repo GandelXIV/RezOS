@@ -13,7 +13,7 @@ If you wish to create your own profile, simply copy the `default` directory, ren
 ## Default config files explained
 A deeper description can usually be seen in the file itself.
 
-- `Makeconfig` : Build system options. Allows setting compile optimizations & paths.
+- `Makeconfig.mk` : Build system options. Allows setting compile optimizations & paths.
 - `rkernel.rs` : Main kernel configuration file.
 - `kentry-aarch64.S` : lower-level settings for the kernel. Only for aarch64/arm64.
 - `kentry-x86_64.asm` : lower-level settings for the kernel. Only for x86_64/amd64.

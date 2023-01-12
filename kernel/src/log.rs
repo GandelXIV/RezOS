@@ -13,7 +13,7 @@ use core::fmt::{Arguments, Write};
 use lazy_static::lazy_static;
 use spin::Mutex;
 
-/// The selected logger at compile time. It must implement a `new()` function that returns `Self` & 
+/// The selected logger at compile time. It must implement a `new()` function that returns `Self` &
 /// the `core::fmt::Write` trait.
 type GlobalLog = StaticLog;
 
@@ -28,10 +28,7 @@ const PRINT_PANIC: &'static str = "Could not write to GLOBAL_LOG!";
 
 /// Used in the `log!()` macro as utility function to reach `GLOBAL_LOG`
 pub fn print(msg: Arguments) {
-    GLOBAL_LOG
-        .lock()
-        .write_fmt(msg)
-        .expect(PRINT_PANIC)
+    GLOBAL_LOG.lock().write_fmt(msg).expect(PRINT_PANIC)
 }
 
 /// Main macro used to log data, similar syntax to the standart `print!()`
@@ -44,14 +41,13 @@ macro_rules! log {
 
 // Static Log implementation
 
-/// Size of the static buffer for `StaticLog` in bytes
-const STATIC_LOG_MAX_CHARACTERS: usize = 204_800;
+use crate::config::STATIC_LOG_MAX_CHARACTERS;
 
 /// Simple implementation of `GlobalLog` with a static size/limit.
 ///
-/// This writes all info to `limine::print_bytes` and stores it in a static buffer. 
-/// One big issue with this is that if the buffer fills using `log!()` will cause a `PRINT_PANIC`. 
-/// The only possible fix is to increase `STATIC_LOG_MAX_CHARACTERS`, 
+/// This writes all info to `limine::print_bytes` and stores it in a static buffer.
+/// One big issue with this is that if the buffer fills using `log!()` will cause a `PRINT_PANIC`.
+/// The only possible fix is to increase `STATIC_LOG_MAX_CHARACTERS`,
 /// recompile and hope it does not fill again.
 struct StaticLog {
     content: ArrayString<STATIC_LOG_MAX_CHARACTERS>,

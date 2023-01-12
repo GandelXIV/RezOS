@@ -60,8 +60,6 @@ bitfield! {
 
 struct SegmentDescriptor(u64);
 
-
-
 impl SegmentDescriptor {
     // bit write & readers
     bitfield!(set_limit0, u16, 15, 0);
@@ -138,7 +136,7 @@ impl SegmentDescriptor {
     const fn new_kernel_code32() -> Self {
         let mut sd = Self::new_kernel();
         sd.set_whole_limit(1048575);
-        sd.set_access_e(true);        
+        sd.set_access_e(true);
         sd.set_flag_g(true);
         sd.set_flag_db(true);
         return sd;
