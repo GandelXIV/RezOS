@@ -1,12 +1,13 @@
 # Configuration
-
+Note: All of the following scripts must be run from the project root.
 Before building the OS, you need to create a few configuration files.
-This can be done manually or by running the `config/config.sh` script from the project root.
+This can be done manually or by running the `config/config.sh` script.
 The way it works is that it links files from `profiles/` to their correct location as described in `list.json`. The script requires you to pass it as a command line argument the name of the profile. It also creates build directories.
 
 ## How to change configuration
 
-To change the configuration you need to first deconfigure with the `config/deconfig.sh` script. Note that it must be run from the project root! After that, you can reconfig with any profile you want. Alternativaly, use the `reconfig.sh` script.
+To change the configuration you need to first deconfigure with the `config/deconfig.sh` script.
+After that, you can reconfig with any profile you want. Alternativaly, use the `reconfig.sh` script.
 
 ## Creating profiles
 
