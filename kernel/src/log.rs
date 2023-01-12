@@ -41,22 +41,22 @@ macro_rules! log {
 
 // Static Log implementation
 
-use crate::config::STATIC_LOG_MAX_CHARACTERS;
+use crate::config::LOG_STATIC_CAPACITY;
 
 /// Simple implementation of `GlobalLog` with a static size/limit.
 ///
 /// This writes all info to `limine::print_bytes` and stores it in a static buffer.
 /// One big issue with this is that if the buffer fills using `log!()` will cause a `PRINT_PANIC`.
-/// The only possible fix is to increase `STATIC_LOG_MAX_CHARACTERS`,
+/// The only possible fix is to increase `LOG_STATIC_CAPACITY`,
 /// recompile and hope it does not fill again.
 struct StaticLog {
-    content: ArrayString<STATIC_LOG_MAX_CHARACTERS>,
+    content: ArrayString<LOG_STATIC_CAPACITY>,
 }
 
 impl StaticLog {
     fn new() -> Self {
         Self {
-            content: ArrayString::<STATIC_LOG_MAX_CHARACTERS>::new(),
+            content: ArrayString::<LOG_STATIC_CAPACITY>::new(),
         }
     }
 }

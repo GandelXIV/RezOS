@@ -1,6 +1,8 @@
 /// First message displayed when kmain() is executed
-pub const FIRST_MESSAGE: &str = "Hello World!\n";
+pub const MESSAGE_FIRST: &str = "Hello World!\n";
 
-/// Capacity of the kernel global log in bytes.
-/// On overflow triggers a kernel panic
-pub const STATIC_LOG_MAX_CHARACTERS: usize = 204_800;
+/// Max ammount of characters that fit into the kernel global log, sized in bytes.
+///
+/// If it overflows , a kernel panic is triggered
+pub const LOG_STATIC_CAPACITY: usize = 204_800;
+

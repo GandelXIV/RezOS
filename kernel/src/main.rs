@@ -73,7 +73,7 @@ use tinyvec::ArrayVec;
 
 #[no_mangle]
 pub extern "C" fn kmain() {
-    log!("{}", config::FIRST_MESSAGE);
+    log!("{}", config::MESSAGE_FIRST);
 
     // hardware
     let boot_time = limine::boot_time_stamp();
