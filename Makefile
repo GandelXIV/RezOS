@@ -55,17 +55,6 @@ $(1): $(2)
 	ln -sf $(2) $(1)
 endef
 
-
-# directories
-
-dir_build:
-	mkdir -p build
-	mkdir -p build/isodeps_x86_64/
-	mkdir -p build/ISODEPS_aarch64/
-
-dir_log:
-	mkdir -p log/
-
 ############ x86_64 RECIEPES
 
 RKERNEL_SRC_x86_64 = $(RKERNEL_SRC) kernel/src/arch/amd64/* kernel/triple/x86_64.json kernel/link/x86_64.ld
@@ -85,7 +74,7 @@ ISODEPS_x86_64 = build/isoroot_x86_64/kernel.bin \
 								 build/isoroot_x86_64/limine.cfg 
 
 # main
-build/RezOS-x86_64.iso: $(ISODEPS_x86_64) build/limine-deploy dir_build
+build/RezOS-x86_64.iso: $(ISODEPS_x86_64) build/limine-deploy 
 	xorriso -as mkisofs -b limine-cd.bin \
 					-no-emul-boot \
 					-boot-load-size 4 \
@@ -131,7 +120,7 @@ ISODEPS_aarch64 = build/isoroot_aarch64/kernel.bin \
 									build/isoroot_aarch64/limine.cfg \
 									build/isoroot_aarch64/BOOTAA64.EFI
 
-build/RezOS-aarch64.iso: $(ISODEPS_aarch64) dir_build
+build/RezOS-aarch64.iso: $(ISODEPS_aarch64) 
 	xorriso -as mkisofs \
 					-no-emul-boot \
 					-boot-info-table \
@@ -179,7 +168,7 @@ all: build/RezOS-x86_64.iso build/RezOS-aarch64.iso doc
 doc: doc/buildflow.png $(RKERNEL_DOC_aarch64) $(RKERNEL_DOC_x86_64)
 	@echo "Documentation generated!"
 
-run-x86_64: build/RezOS-x86_64.iso dir_log
+run-x86_64: build/RezOS-x86_64.iso 
 	qemu-system-x86_64 $(RUN_ARGS) $^ $(QEMU_ARGS)
 
 clean:
