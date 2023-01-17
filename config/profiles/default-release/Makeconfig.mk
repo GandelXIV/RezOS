@@ -1,6 +1,9 @@
 # All of these options can be change at runtime using the follow syntax:
 # make [TARGETS] [OPTION1]=[VALUE1] [OPTION2]=[VALUE2] ...
 
+# default target when none is specified
+.DEFAULT_GOAL=build/RezOS-x86_64.iso
+
 # compilers the rust kernel code with the --release flag
 KERNEL_BUILD_RELEASE ?= yes # either yes|empty
 

@@ -55,6 +55,7 @@ $(1): $(2)
 	ln -sf $(2) $(1)
 endef
 
+
 ############ x86_64 RECIEPES
 
 RKERNEL_SRC_x86_64 = $(RKERNEL_SRC) kernel/src/arch/amd64/* kernel/triple/x86_64.json kernel/link/x86_64.ld
@@ -74,7 +75,7 @@ ISODEPS_x86_64 = build/isoroot_x86_64/kernel.bin \
 								 build/isoroot_x86_64/limine.cfg 
 
 # main
-build/RezOS-x86_64.iso: $(ISODEPS_x86_64) build/limine-deploy 
+build/RezOS-x86_64.iso: $(ISODEPS_x86_64) build/limine-deploy	
 	xorriso -as mkisofs -b limine-cd.bin \
 					-no-emul-boot \
 					-boot-load-size 4 \
@@ -96,10 +97,12 @@ $(LIMINE_ARTIFACTS_x86_64): $(call rwildcard limine/*)
 	make -C limine limine-deploy
 
 # the kernel itself compiles to a static library that gets linked to kentry.asm which holds the entry point and some additional structures and functions (such as limine requests)
-build/kernel.x86_64.bin: build/kentry.x86_64.o $(RKERNEL_SRC_x86_64)
+build/kernel.x86_64.bin: build/kentry.x86_64.o $(RKERNEL_SRC_x86_64) 	
+	mkdir -p build/isoroot_x86_64/
 	$(call compile_kernel,x86_64, $<, $@, ld)
 	
 build/kentry.x86_64.o: kernel/kentry/x86_64/*
+	mkdir -p build/
 	nasm -f elf64 kernel/kentry/x86_64/kentry.asm -o $@
 
 isodeps_x86_64: $(ISODEPS_x86_64)
@@ -120,7 +123,7 @@ ISODEPS_aarch64 = build/isoroot_aarch64/kernel.bin \
 									build/isoroot_aarch64/limine.cfg \
 									build/isoroot_aarch64/BOOTAA64.EFI
 
-build/RezOS-aarch64.iso: $(ISODEPS_aarch64) 
+build/RezOS-aarch64.iso: $(ISODEPS_aarch64)
 	xorriso -as mkisofs \
 					-no-emul-boot \
 					-boot-info-table \
@@ -137,9 +140,11 @@ $(PATH_LIMINE_BIN)/BOOTAA64.EFI: $(call rwildcard limine/*)
 	$(call compile_limine_base, --enable-uefi-aarch64)
 
 build/kernel.aarch64.bin: build/kentry.aarch64.o $(RKERNEL_SRC_aarch64)
+	mkdir -p build/isoroot_aarch64/
 	$(call compile_kernel,aarch64, $<, $@, aarch64-linux-gnu-ld)
 
 build/kentry.aarch64.o: kernel/kentry/aarch64/*
+	mkdir -p build/
 	aarch64-linux-gnu-as kernel/kentry/aarch64/kentry.S -o $@
 
 # docs
