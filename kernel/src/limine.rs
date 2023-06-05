@@ -54,7 +54,8 @@ pub fn print_bytes(s: &[u8]) {
     ((access).write)(access.get_terminal(), s, s.len());
 }
 
-/// outdated function
+// outdated functions
+/*
 pub fn print_hex(mut n: usize) {
     let mut x: [u8; 18] = [0; 18];
     x[0] = b'0';
@@ -82,6 +83,7 @@ pub fn print_dec(mut n: usize) {
     let access = TERM0.lock();
     ((access).write)(access.get_terminal(), &x, x.len());
 }
+*/
 
 /// macro that completes a request and response struct with all the default fields.
 ///
