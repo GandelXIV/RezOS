@@ -71,7 +71,7 @@ macro_rules! bitfield {
     // bitrange, only setter
     ($name:ident, $typ:ty, $h:literal, $l:literal) => {
         const fn $name(&mut self, payload: $typ) {
-            *self = Self(bin_insert(self.0, payload, $h, $l));
+            *self = Self(bin_insert(self.0, payload as u64, $h, $l));
         }
     };
 
@@ -89,7 +89,7 @@ macro_rules! bitfield {
     // single-bit, only setter
     ($name:ident, $typ:ty, $b:literal) => {
         const fn $name(&mut self, payload: $typ) {
-            *self = Self(bin_insert(self.0, payload, $b, $b));
+            *self = Self(bin_insert(self.0, payload as u64, $b, $b));
         }
     };
 
@@ -112,14 +112,11 @@ macro_rules! bitfield {
 /// assert_eq!(bin_extract(0b11110011, 4, 1), 0b1001)
 /// ```
 
-pub const fn bin_extract<T: Into<u64>>(target: T, higher: usize, lower: usize) -> u64
-where
-    u64: ~const From<T>,
-{
+pub const fn bin_extract(target: u64, higher: usize, lower: usize) -> u64 {
     // (x >> lower) -> cuts out the stuff we dont care about to the right
     // ( (1 << (higher + 1 - lower)) - 1) -> creates a binary number full of ones with length (higher+1-lower), that then get used as a mask
     // for bitwise and ('&') to remove all the stuff we dont care about to the left
-    (target.into() >> lower) & ((1 << (higher + 1 - lower)) - 1)
+    (target >> lower) & ((1 << (higher + 1 - lower)) - 1)
 }
 
 /// inserts a binary sequence into another one
@@ -129,18 +126,9 @@ where
 /// assert_eq!(bin_insert(0b0000000000000000, 0b00001111, 6, 3), 0b0000000000111100)
 /// assert_eq!(bin_insert(0b1110001010001100, 0b101, 16, 14), 0b1010001010001100)
 /// ```
-pub const fn bin_insert<T: Into<u64>, U: Into<u64>>(
-    target: T,
-    payload: U,
-    higher: usize,
-    lower: usize,
-) -> u64
-where
-    u64: ~const From<U>,
-    u64: ~const From<T>,
-{
+pub const fn bin_insert(target: u64, payload: u64, higher: usize, lower: usize) -> u64 {
     // this mask enables all bits that have to be with a BitOr
-    let enable = (payload.into() << lower) as u64;
+    let enable = (payload << lower) as u64;
     // this mask disables all bits that must not be with a BitAnd
     // same as the enable mask, but full of ones on the left & the right to preserve the rest of
     // the data, except for our payload that can have some zeroes for disabling
@@ -152,5 +140,5 @@ where
             u64::MAX << higher + 1
         });
     // apply the masks
-    ((target.into() | enable) & disable).into()
+    (target | enable) & disable
 }

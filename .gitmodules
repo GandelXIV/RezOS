@@ -5,3 +5,6 @@
 	path = limine
 	url = https://github.com/limine-bootloader/limine
 
+[submodule "smelt3"]
+	path = smelt3
+	url = ssh://git@github.com/GandelXIV/smelt3

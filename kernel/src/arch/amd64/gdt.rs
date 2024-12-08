@@ -89,14 +89,14 @@ impl SegmentDescriptor {
 
     // addr: u20
     const fn set_whole_limit(&mut self, addr: u32) {
-        self.set_limit0(bin_extract(addr, 15, 0) as u16);
-        self.set_limit1(bin_extract(addr, 19, 16) as u8);
+        self.set_limit0(bin_extract(addr as u64, 15, 0) as u16);
+        self.set_limit1(bin_extract(addr as u64, 19, 16) as u8);
     }
 
     const fn set_whole_base(&mut self, addr: u32) {
-        self.set_base0(bin_extract(addr, 15, 0) as u16);
-        self.set_base1(bin_extract(addr, 23, 16) as u8);
-        self.set_base2(bin_extract(addr, 31, 24) as u8);
+        self.set_base0(bin_extract(addr as u64, 15, 0) as u16);
+        self.set_base1(bin_extract(addr as u64, 23, 16) as u8);
+        self.set_base2(bin_extract(addr as u64, 31, 24) as u8);
     }
 
     // base constructor for kernel descriptors
