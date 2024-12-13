@@ -21,7 +21,7 @@ A modern operating system written in the rust programming language.
 Install dependencies, there are 2 ways of doing this:
 ### Locally
   This option is only viable on linux, so if you are on a different platform consider using the Docker method. <br> <br>
-  Use an install script located in `scripts/install/all/{your-distro}.sh`. <br> 
+  Use an install script located in `scripts/install/all/{your-distro}.sh`. <br>
   If your distro does not have a script, you can still use `scripts/install/rust-linux.sh` to setup rust, then install all the packages in `scripts/install/packages/packages.md` manually
 ###
 ### Inside Docker
@@ -34,6 +34,4 @@ Install dependencies, there are 2 ways of doing this:
 One last step before compiling is to configure the project, you need to do this only once. <br> Either run `./config.sh` or follow the steps in `config/README.md`.
 ##
 ## D. Compile!
-The whole system can be built with `make`, this produces a `RezOS-x86_64.iso` file in `build/` that can then by run in an emulator with `make run-x86_64`
-- If you wish to target `aarch64`, simply replace the `x86_64`in the make commands with it.
-- More make options are documented in the `Makefile` header
+Run `python3 smeltfile.py iso`, which will generate the final image in `build/image.iso`.

@@ -3,9 +3,9 @@ name: Test if build passes
 # We will trigger this only on the master branch for now to save CI time
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build-pass-check:
@@ -22,7 +22,4 @@ jobs:
       - name: configure
         run: ./config.sh default
       - name: Build x86_64
-        run: source $HOME/.cargo/env && make build/RezOS-x86_64.iso
-      - name: Build aarch64
-        run: source $HOME/.cargo/env && make build/RezOS-aarch64.iso
-
+        run: source $HOME/.cargo/env && python3 smeltile.py iso
