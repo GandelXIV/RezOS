@@ -12,8 +12,8 @@ echo "Deconfiguring..."
 
 set -x
 
-rm -f kernel/kentry/aarch64/config.S
-rm -f kernel/kentry/x86_64/config.asm
+#rm -f kernel/kentry/aarch64/config.S
+rm -f kernel/obj/x86_64/limfeats/config.asm
 rm -f kernel/src/config.rs
 rm -f config.mk
 

@@ -68,6 +68,7 @@ use tinyvec::ArrayVec;
 
 #[no_mangle]
 pub extern "C" fn kmain() {
+    loop {}
     log!("{}", config::MESSAGE_FIRST);
 
     // hardware

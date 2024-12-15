@@ -3,6 +3,9 @@
 ; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 ; This file holds all the limine requests that then get detected by the bootloader
+%include "kernel/obj/x86_64/limfeats/config.asm"
+
+section .text
 
 ; CONSTANTS
 MAGIC_COMMON_A equ 0xc7b1dd30df4c8b88
@@ -15,14 +18,14 @@ MAGIC_MEMORY_MAP_A equ 0x67cf3d9d378a806f
 MAGIC_MEMORY_MAP_B equ 0xe304acdfc50c3c62
 MAGIC_BOOT_TIME_A equ 0x502746e184c088aa
 MAGIC_BOOT_TIME_B equ 0xfbc5ec83e6327893
-MAGIC_KERNEL_ADRESS_A equ 0x71ba76863cc55f63 
+MAGIC_KERNEL_ADRESS_A equ 0x71ba76863cc55f63
 MAGIC_KERNEL_ADRESS_B equ 0xb2644a48c516a487
 MAGIC_HHDM_A equ 0x48dcf1cb8ad2b852
 MAGIC_HHDM_B equ 0x63984e959a98244b
 MAGIC_STACK_SIZE_A equ 0x224ef0460a8e8926
 MAGIC_STACK_SIZE_B equ 0xe1cb0fc25f46ea3d
 
-; REQUESTS 
+; REQUESTS
 
 extern LIMINE_REQUEST_TERMINAL
 extern LIMINE_REQUEST_BOOT_INFO
@@ -38,7 +41,7 @@ LIMINE_REQUEST_BOOT_INFO:
 .common2  dq MAGIC_COMMON_B
 .feat1    dq MAGIC_BOOT_INFO_A
 .feat2    dq MAGIC_BOOT_INFO_B
-.revision dq 0 
+.revision dq 0
 ; pointer to the response
 .response dq 0
 
@@ -75,7 +78,7 @@ LIMINE_REQUEST_BOOT_TIME:
 LIMINE_REQUEST_KERNEL_ADDRESS:
 .common1  dq MAGIC_COMMON_A
 .common2  dq MAGIC_COMMON_B
-.feat1    dq MAGIC_KERNEL_ADRESS_A 
+.feat1    dq MAGIC_KERNEL_ADRESS_A
 .feat2    dq MAGIC_KERNEL_ADRESS_B
 .revision dq 0
 ; pointer to the response
@@ -103,4 +106,3 @@ LIMINE_REQUEST_STACK_SIZE:
 
 ; keep this on the bottom
 CALLBACK:
-

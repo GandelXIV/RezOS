@@ -4,14 +4,8 @@
 
 section .text
 
-; configuration
-%include "kernel/kentry/x86_64/config.asm"
-; included into .text to not get optimised out
-%include "kernel/kentry/x86_64/limine.asm"
-
 extern kmain
 global _start
 
 _start:
 jmp kmain   ; main function linked from kernel src/main.rs
-
