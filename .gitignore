@@ -2,6 +2,7 @@
 /plexusFS/target
 /plexusFS/fs.bin
 /build
+!build/.gitkeep
 /lab
 /isoroot/*
 /log/
