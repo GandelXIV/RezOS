@@ -25,6 +25,7 @@ extern "C" {
     static LIMINE_REQUEST_KERNEL_ADDRESS: RequestKernelAddress;
     static LIMINE_REQUEST_HHDM: RequestHHDM;
     static LIMINE_REQUEST_STACK_SIZE: RequestStackSize;
+    static LIMINE_REQUEST_FRAMEBUFFER: RequestFrameBuffer;
 }
 
 /*
@@ -280,6 +281,21 @@ limine_feature! {
     }
 
     struct ResponseStackSize {}
+}
+
+// ======= Framebuffer feature
+// See: https://github.com/limine-bootloader/limine/blob/v8.x/PROTOCOL.md#framebuffer-feature
+
+limine_feature! {
+
+    /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#stack-size-feature`
+
+    struct RequestFrameBuffer {}
+
+    struct ResponseFrameBuffer {
+        framebuffer_count: u64,
+        framebuffers: MutPtr<MutPtr<Framebuffer>>,
+    }
 }
 
 /// used by both the Terminal feature and the Framebuffer feature
