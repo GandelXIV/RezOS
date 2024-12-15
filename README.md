@@ -34,4 +34,4 @@ Install dependencies, there are 2 ways of doing this:
 One last step before compiling is to configure the project, you need to do this only once. <br> Either run `./config.sh` or follow the steps in `config/README.md`.
 ##
 ## D. Compile!
-Run `python3 smeltfile.py iso`, which will generate the final image in `build/image.iso`.
+Run `python3 smeltfile.py iso`, which will generate the final image in `build/image.iso`. You can start the OS in qemu with `qemu-system-x86_64 build/image.iso -serial file:serial.log`.
