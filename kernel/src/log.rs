@@ -66,7 +66,7 @@ impl Write for StaticLog {
         if s.len() > self.content.remaining_capacity() {
             return Err(fmt::Error);
         }
-        limine::print_bytes(s.as_bytes());
+        //limine::print_bytes(s.as_bytes());
         self.content.push_str(s);
         Ok(())
     }

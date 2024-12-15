@@ -27,7 +27,8 @@ MAGIC_STACK_SIZE_B equ 0xe1cb0fc25f46ea3d
 
 ; REQUESTS
 
-extern LIMINE_REQUEST_TERMINAL
+; deprecated in new limine versions
+;extern LIMINE_REQUEST_TERMINAL
 extern LIMINE_REQUEST_BOOT_INFO
 extern LIMINE_REQUEST_MEMORY_MAP
 extern LIMINE_REQUEST_BOOT_TIME
@@ -45,17 +46,17 @@ LIMINE_REQUEST_BOOT_INFO:
 ; pointer to the response
 .response dq 0
 
-LIMINE_REQUEST_TERMINAL:
-.common1  dq MAGIC_COMMON_A
-.common2  dq MAGIC_COMMON_B
-.feat1    dq MAGIC_TERMINAL_A
-.feat2    dq MAGIC_TERMINAL_B
-.revision dq 0
+;LIMINE_REQUEST_TERMINAL:
+;.common1  dq MAGIC_COMMON_A
+;.common2  dq MAGIC_COMMON_B
+;.feat1    dq MAGIC_TERMINAL_A
+;.feat2    dq MAGIC_TERMINAL_B
+;.revision dq 0
 ; pointer to the response
-.response dq 0
+;.response dq 0
 ; used by the write() function returned by this feature
 ; we provide a default implementation CALLBACK
-.callback dq CALLBACK
+;.callback dq CALLBACK
 
 LIMINE_REQUEST_MEMORY_MAP:
 .common1  dq MAGIC_COMMON_A

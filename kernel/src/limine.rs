@@ -11,27 +11,15 @@ use crate::enum_names;
 use core::convert::TryFrom;
 use core::ffi::CStr;
 use core::iter::Iterator;
-use lazy_static::lazy_static;
-use spin::Mutex;
 
 /// simple pointer wrapper that can be replaced in the future for something like `NonNull<T>`
 type Ptr<T> = *const T;
 /// simple mutable pointer wrapper that can be replaced in the future for something like `NonNull<T>`
 type MutPtr<T> = *mut T;
 
-/// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#terminal-callback`
-type TerminalCallbackFunction = extern "C" fn(Ptr<Terminal>, u64, u64, u64, u64);
-
-/// function provided by limine to simplify display access.
-///
-/// WARNING: The function is NOT thread-safe, NOT reentrant, per-terminal. <br>
-/// We access it from a `Mutex<TerminalWriter>` e.g. `TERM0`.
-type TerminalWriteFunction = extern "C" fn(Ptr<Terminal>, *const [u8], usize);
-
 // Linked from kentry/limine.asm
 extern "C" {
     static LIMINE_REQUEST_BOOT_INFO: RequestBootInfo;
-    static LIMINE_REQUEST_TERMINAL: RequestTerminal;
     static LIMINE_REQUEST_MEMORY_MAP: RequestMemoryMap;
     static LIMINE_REQUEST_BOOT_TIME: RequestBootTime;
     static LIMINE_REQUEST_KERNEL_ADDRESS: RequestKernelAddress;
@@ -39,12 +27,7 @@ extern "C" {
     static LIMINE_REQUEST_STACK_SIZE: RequestStackSize;
 }
 
-lazy_static! {
-    /// handles concurrent `terminal.write()` calls
-    static ref TERM0: Mutex<TerminalWriter> =
-        Mutex::new(TerminalWriter::new(0).expect("Could not open limine terminal"));
-}
-
+/*
 /// public interface to print to TERM0
 /// , accepts ASCII (non utf8 strings) e.g. `b"Hello"`
 ///
@@ -52,36 +35,6 @@ lazy_static! {
 pub fn print_bytes(s: &[u8]) {
     let access = TERM0.lock();
     ((access).write)(access.get_terminal(), s, s.len());
-}
-
-// outdated functions
-/*
-pub fn print_hex(mut n: usize) {
-    let mut x: [u8; 18] = [0; 18];
-    x[0] = b'0';
-    x[1] = b'x';
-    for i in 0..14 {
-        let d = (n % 16) as u8;
-        if d < 10 {
-            x[17 - i] = d + 48;
-        } else {
-            x[17 - i] = d + 55;
-        }
-        n /= 16;
-    }
-    let access = TERM0.lock();
-    ((access).write)(access.get_terminal(), &x, x.len());
-}
-
-/// outdated function
-pub fn print_dec(mut n: usize) {
-    let mut x: [u8; 20] = [0; 20];
-    for i in 0..x.len() {
-        x[19 - i] = (n % 10 + 48) as u8;
-        n /= 10;
-    }
-    let access = TERM0.lock();
-    ((access).write)(access.get_terminal(), &x, x.len());
 }
 */
 
@@ -208,22 +161,6 @@ impl TryFrom<u64> for MemmapEntryType {
     }
 }
 
-/* outdated function
-impl Into<&'static [u8]> for MemmapEntryType {
-    fn into(self) -> &'static [u8] {
-        match self {
-            MemmapEntryType::Usable => b"Usable              ",
-            MemmapEntryType::Reserved => b"Reserved            ",
-            MemmapEntryType::AcpiReclaimable => b"ACPI Reclaimable    ",
-            MemmapEntryType::AcpiNvs => b"ACPI NVS            ",
-            MemmapEntryType::BadMemory => b"Bad Memory!         ",
-            MemmapEntryType::BootloaderReclaimable => b"BL Reclaimable      ",
-            MemmapEntryType::KernelAndModules => b"Kernel & Modules    ",
-            MemmapEntryType::MemmapFramebuffer => b"Memmap Framebuffer  ",
-        }
-    }
-}*/
-
 /// extern interface function used by the rest of the kernel
 pub fn memory_map() -> MemoryMap {
     MemoryMap::new(unsafe { &*(LIMINE_REQUEST_MEMORY_MAP.response) })
@@ -343,62 +280,6 @@ limine_feature! {
     }
 
     struct ResponseStackSize {}
-}
-
-// ======= Terminal feature
-// See: https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#bootloader-info-feature
-
-/// Safe wrapper over the `TerminalWriteFunction` by the terminal feature
-struct TerminalWriter {
-    term: usize, // pointer to terminal
-    write: TerminalWriteFunction,
-}
-
-// handles
-impl TerminalWriter {
-    fn new(terminal_number: u64) -> Option<Self> {
-        let term_resp = unsafe { &*(LIMINE_REQUEST_TERMINAL.response) };
-        if term_resp.terminal_count > terminal_number {
-            return Some(Self {
-                term: term_resp.terminals as usize + terminal_number as usize,
-                write: term_resp.write,
-            });
-        }
-        None
-    }
-
-    fn get_terminal(&self) -> *const Terminal {
-        self.term as *const Terminal
-    }
-
-    // exposes the (width, height) of term
-    fn dimensions(&self) -> (u64, u64) {
-        let t = unsafe { &*self.get_terminal() };
-        (t.columns, t.rows)
-    }
-}
-
-limine_feature! {
-
-    /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#bootloader-info-feature`
-
-    struct RequestTerminal {
-        callback: TerminalCallbackFunction,
-    }
-
-    struct ResponseTerminal {
-        terminal_count: u64,
-        terminals: Ptr<Ptr<Terminal>>,
-        write: TerminalWriteFunction,
-    }
-}
-
-/// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#bootloader-info-feature`
-#[repr(C)]
-struct Terminal {
-    columns: u64,
-    rows: u64,
-    framebuffer: Ptr<Framebuffer>,
 }
 
 /// used by both the Terminal feature and the Framebuffer feature
