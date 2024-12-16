@@ -7,6 +7,10 @@
 //!
 //! <br> See more about the protocol: `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md`
 
+use embedded_graphics::pixelcolor::raw::RawU32;
+use embedded_graphics::pixelcolor::{Rgb555, Rgb565, Rgb888};
+use embedded_graphics::prelude::*;
+
 use crate::enum_names;
 use core::convert::TryFrom;
 use core::ffi::CStr;
@@ -303,7 +307,8 @@ limine_feature! {
 /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#framebuffer-feature`
 /// `https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md#bootloader-info-feature`
 #[repr(C)]
-struct Framebuffer {
+#[derive(Debug)]
+pub struct Framebuffer {
     pub address: MutPtr<u8>,
     pub width: u64,
     pub height: u64,
@@ -319,4 +324,115 @@ struct Framebuffer {
     pub reserved: [u8; 7],
     pub edid_size: u64,
     pub edid: Ptr<u8>,
+}
+
+pub fn framebuffer0() -> &'static mut Framebuffer {
+    unsafe { &mut **(*LIMINE_REQUEST_FRAMEBUFFER.response).framebuffers }
+}
+
+#[derive(PartialEq, Copy, Clone)]
+pub struct LColor {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+}
+
+impl From<Rgb555> for LColor {
+    fn from(value: Rgb555) -> Self {
+        Self {
+            r: value.r(),
+            g: value.g(),
+            b: value.b(),
+        }
+    }
+}
+
+impl From<Rgb565> for LColor {
+    fn from(value: Rgb565) -> Self {
+        Self {
+            r: value.r(),
+            g: value.g(),
+            b: value.b(),
+        }
+    }
+}
+
+impl From<Rgb888> for LColor {
+    fn from(value: Rgb888) -> Self {
+        Self {
+            r: value.r(),
+            g: value.g(),
+            b: value.b(),
+        }
+    }
+}
+
+impl PixelColor for LColor {
+    type Raw = RawU32;
+}
+
+impl OriginDimensions for Framebuffer {
+    fn size(&self) -> Size {
+        Size::new(self.width as u32, self.height as u32)
+    }
+}
+
+impl DrawTarget for Framebuffer {
+    type Color = LColor;
+    type Error = DrawPixelError;
+
+    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
+    where
+        I: IntoIterator<Item = Pixel<Self::Color>>,
+    {
+        for Pixel(coord, color) in pixels.into_iter() {
+            draw_pixel(
+                &self,
+                coord.x as usize,
+                coord.y as usize,
+                (color.r, color.g, color.b),
+            )?;
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub enum DrawPixelError {
+    InvalidX,
+    InvalidY,
+    BadProperties,
+}
+
+pub fn draw_pixel(
+    fb: &Framebuffer,
+    x: usize,
+    y: usize,
+    color: (u8, u8, u8),
+) -> Result<(), DrawPixelError> {
+    if x > fb.width as usize {
+        return Err(DrawPixelError::InvalidX);
+    }
+
+    if y > fb.height as usize {
+        return Err(DrawPixelError::InvalidY);
+    }
+
+    if fb.bpp != 32 {
+        return Err(DrawPixelError::BadProperties);
+    }
+
+    let (red, green, blue) = color;
+    let pixc: u32 = ((red as u32) << fb.red_mask_shift)
+        | ((green as u32) << fb.green_mask_shift)
+        | ((blue as u32) << fb.blue_mask_shift);
+
+    unsafe {
+        *(fb.address as *mut u32)
+            .wrapping_add(x)
+            .wrapping_add(fb.width as usize * y) = pixc;
+    }
+
+    Ok(())
 }

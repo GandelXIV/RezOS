@@ -143,6 +143,9 @@ pub extern "C" fn kmain() {
     let hhdm = limine::hhdm();
     log!("HHDM: 0x{:016X}\n", hhdm);
 
+    log!("Framebuffer 0: {:?}\n", limine::framebuffer0());
+    driver::lfb::init();
+
     log!("Nothing to do!\n");
     panic!("Nothing to do!");
 }

@@ -63,10 +63,10 @@ impl StaticLog {
 
 impl Write for StaticLog {
     fn write_str(&mut self, s: &str) -> fmt::Result {
+        crate::driver::serial::write(s);
         if s.len() > self.content.remaining_capacity() {
             return Err(fmt::Error);
         }
-        crate::driver::serial::write(s);
         self.content.push_str(s);
         Ok(())
     }
