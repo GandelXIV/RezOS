@@ -89,4 +89,10 @@ def isoroot():
 
     return File(output)
 
+@task("docs")
+def doc_kernel():
+    use(file_tree("kernel/src/"))
+    shell("cd kernel && cargo doc --document-private-items")
+    return File("kernel/target/doc/kernel/index.html")
+
 smelt3.cli()

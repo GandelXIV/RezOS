@@ -24,7 +24,8 @@
 */
 
 use core::panic::{self, PanicInfo};
-// Do not remove these imports, they may useless but they prevent link errors
+extern crate alloc;
+// Do not remove these imports, they may look useless but they prevent link errors
 #[allow(unused_imports)]
 use rlibc;
 use rlibcex;
@@ -144,6 +145,7 @@ pub extern "C" fn kmain() {
     log!("HHDM: 0x{:016X}\n", hhdm);
 
     log!("Framebuffer 0: {:?}\n", limine::framebuffer0());
+    alloc::boxed::Box::new(4);
     driver::lfb::init();
 
     log!("Nothing to do!\n");

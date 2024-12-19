@@ -5,3 +5,4 @@
  */
 
 pub mod map;
+pub mod staticalloc;
