@@ -4,10 +4,9 @@ extern crate alloc;
 
 const MAX: usize = crate::config::STATIC_ALLOCATOR_SIZE_BYTES;
 
-#[global_allocator]
-static GLOBAL_STATIC_ALLOCATOR: StaticAllocator<MAX> = StaticAllocator::new();
+pub static GLOBAL_STATIC_ALLOCATOR: StaticAllocator<MAX> = StaticAllocator::new();
 
-struct StaticAllocator<const SIZE: usize> {
+pub struct StaticAllocator<const SIZE: usize> {
     buffer: [u8; SIZE],
     bump_addr: spin::Mutex<usize>,
     refcount: spin::Mutex<usize>,
