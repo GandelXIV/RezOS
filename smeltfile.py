@@ -6,11 +6,25 @@ from smelt3 import task, use, File, file_tree, shell, create_setting, sett
 
 create_setting("KERNEL_BUILD_RELEASE", "")
 
+### Abstract
+
 def nasm(main: str, name: str, srcs: dict):
     for src in srcs.values():
         use(src)
     shell(f"nasm -f elf64 {main} -o {name}")
     return File(name)
+
+def compile_rkernel(arch: str):
+    use(File("kernel/Cargo.lock"))
+    use(File("kernel/Cargo.toml"))
+    use(File("kernel/.cargo/config.toml"))
+    use(File(f"kernel/triple/{arch}.json"))
+    use(file_tree("kernel/src/"))
+    KERNEL_BUILD_RELEASE = sett("KERNEL_BUILD_RELEASE")
+
+    shell(f"cd kernel/ && cargo build --target triple/{arch}.json --lib {"--release" if KERNEL_BUILD_RELEASE else ""}")
+    return File(f"kernel/target/{arch}/{"release" if KERNEL_BUILD_RELEASE else "debug"}/libkernel.a")
+
 
 ### x86 tasks
 
@@ -43,16 +57,13 @@ def x86_kernel():
 
 @task()
 def x86_kernel_object():
-    use(File("kernel/Cargo.lock"))
-    use(File("kernel/Cargo.toml"))
-    use(File("kernel/link/x86_64.ld"))
-    use(File("kernel/.cargo/config.toml"))
-    use(File("kernel/triple/x86_64.json"))
-    use(file_tree("kernel/src/"))
-    KERNEL_BUILD_RELEASE = sett("KERNEL_BUILD_RELEASE")
+    return compile_rkernel(arch="x86_64")
 
-    shell(f"cd kernel/ && cargo build --target triple/x86_64.json --lib {"--release" if KERNEL_BUILD_RELEASE else ""}")
-    return File(f"kernel/target/x86_64/{"release" if KERNEL_BUILD_RELEASE else "debug"}/libkernel.a")
+### ARM tasks
+
+@task()
+def arm_kernel_object():
+    return compile_rkernel(arch="aarch64")
 
 ### General tasks
 
