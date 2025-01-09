@@ -22,4 +22,4 @@ jobs:
       - name: configure
         run: ./config.sh default
       - name: Build x86_64
-        run: source $HOME/.cargo/env && python3 smeltile.py iso
+        run: source $HOME/.cargo/env && python3 smeltfile.py iso
