@@ -18,6 +18,14 @@ if [ $# -eq 0 ]
     exit
 fi
 
+if [ ! -e "$PROFILE_DIR/$@" ]
+  then
+    echo "Supplied profile is nonexistent!!!"
+    echo "Profile list:"
+    ls $PROFILE_DIR
+    exit
+fi
+
 PROFILE=$PROFILE_DIR/$1
 
 echo "Creating directories"

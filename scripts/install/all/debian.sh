@@ -6,5 +6,5 @@
 
 set -xe
 
-scripts/install/packages/mint.sh
+scripts/install/packages/debian.sh
 scripts/install/rust-linux.sh
